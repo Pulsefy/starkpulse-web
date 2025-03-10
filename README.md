@@ -1,5 +1,4 @@
-# StarkPulse 🚀
-
+# StarkPulse ⚡🔒
 
 StarkPulse is a cutting-edge, decentralized crypto news aggregator built on the StarkNet ecosystem. It aims to provide a transparent, community-driven platform for crypto news and insights. The platform will feature comprehensive news aggregation, community-driven content, integrated charts and market data, token-based incentives, and support for light and dark modes. 🌐
 

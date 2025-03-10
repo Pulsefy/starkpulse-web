@@ -29,13 +29,11 @@ StarkPulse is a cutting-edge, decentralized crypto news aggregator built on the 
 2. Install dependencies:
    bash
    npm install
-   # or
    yarn install
    
 3. Start the development server:
    bash
    npm run dev
-   # or
    yarn dev
    
 4. Access the application at [http://localhost:3000](http://localhost:3000).

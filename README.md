@@ -47,6 +47,8 @@ Feel free to open issues and contribute to this project! 🤝
 *Conclusion:*
 *StarkPulse* is more than just a news platform; it’s a community. Join us in shaping the future of crypto news and insights. Stay ahead of the curve with *StarkPulse*. 🌟
 
+Below is our figma link
+https://www.figma.com/design/oH6TgNMhQYEGpT5PqewXol/StarkPulse?node-id=1-2&t=5JXg5GmFXbpaZeQs-1
 ---
 
 ### Note on Network Issues:

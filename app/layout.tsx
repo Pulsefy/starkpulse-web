@@ -1,5 +1,5 @@
 import { StarsAnimation } from "@/components/stars-animation";
-import "./globals.css";
+import "@/globals.css";
 import type { Metadata } from "next";
 import {
   Inter,

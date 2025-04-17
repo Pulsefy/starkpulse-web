@@ -1,55 +1,103 @@
-# StarkPulse ⚡🔒
+# StarkPulse Frontend ⚡🔒
 
-StarkPulse is a cutting-edge, decentralized crypto news aggregator built on the StarkNet ecosystem. It aims to provide a transparent, community-driven platform for crypto news and insights. The platform will feature comprehensive news aggregation, community-driven content, integrated charts and market data, token-based incentives, and support for light and dark modes. 🌐
+StarkPulse is a cutting-edge, decentralized crypto news aggregator and portfolio management platform built on the StarkNet ecosystem. This repository contains the frontend application code.
 
-*Key Features:*
-- *Comprehensive News Aggregation* 📰: Collects and curates news from reputable sources, ensuring a comprehensive and unbiased view of the crypto market.
-- *Community-Driven Content* 👥: Enables users to contribute, engage, and rate content, fostering a collaborative environment that promotes high-quality information.
-- *Integrated Charts and Market Data* 📈: Provides real-time charts and market data to help users make informed investment decisions.
-- *Token-Based Incentives* 💰: Rewards users for contributing valuable content, ensuring a vibrant and active community.
-- *Light and Dark Mode* 🌕: Offers a personalized user experience with light and dark mode support.
-- *Decentralization and Transparency* 🔗: Built on StarkNet, ensuring resistance to censorship and single-point-of-failure vulnerabilities.
-- *Security* 🔒: Ensures the integrity and security of user data and interactions.
+## Overview
 
-*Tech Stack:*
-- *Frontend*: Next.js, React, Zustand, Lucide
-- *Backend*: Nest.js, PostgreSQL, Axios
-- *Blockchain*: StarkNet, Cairo
+The StarkPulse frontend delivers a seamless user experience with a futuristic UI design, StarkNet wallet integration, and real-time data visualization. Built with Next.js and React, it provides a responsive and performant interface for interacting with the StarkPulse ecosystem.
 
-*State Management:*
-- *Zustand*: A small, fast, and scalable state management solution using hooks. 📦
+## Key Features
 
-*Installation Instructions:*
+- **Futuristic UI/UX** 🎨: Sleek, modern interface with animated components and responsive design
+- **StarkNet Wallet Integration** 🔐: Seamless connection with StarkNet wallets for secure authentication
+- **News Aggregation Dashboard** 📰: Real-time crypto news from multiple trusted sources
+- **Portfolio Visualization** 📊: Interactive charts and metrics for tracking crypto assets
+- **Transaction History** 🔍: Comprehensive view of on-chain activities
+- **Community Engagement Tools** 👥: Rating, commenting, and content contribution features
+
+## Tech Stack
+
+- **Next.js 14**: App router, server components, and streaming
+- **React 18**: Component-based UI development
+- **TypeScript**: Type-safe code
+- **TailwindCSS**: Utility-first styling
+- **Zustand**: State management
+- **Starknet.js**: StarkNet blockchain interaction
+- **Lucide**: Modern icon library
+- **Recharts**: Responsive charting library
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18.0.0 or higher
+- npm 
+- Git
+
+### Installation
+
 1. Clone the repository:
-   bash
-   git clone https://github.com/Pulsefy/Starkpulse.git
-   cd starkpulse
-   
-2. Install dependencies:
-   bash
-   npm install
-   yarn install
-   
-3. Start the development server:
-   bash
-   npm run dev
-   yarn dev
-   
-4. Access the application at [http://localhost:3000](http://localhost:3000).
+```bash
+git clone https://github.com/Pulsefy/Starkpulse.git
+cd starkpulse
+```
 
-*Maintainers:*
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+4. Access the application at http://localhost:3000
+
+## Project Structure
+
+```
+starkpulse/
+├── app/             # Next.js app router pages
+├── components/      # Reusable UI components
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions and constants
+├── public/          # Static assets
+├── services/        # API and blockchain services
+├── store/           # Zustand state management
+├── styles/          # Global styles
+└── types/           # TypeScript type definitions
+```
+
+## Scripts
+
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run start`: Start production server
+- `npm run lint`: Run ESLint
+- `npm run test`: Run tests
+
+## Connecting to Backend
+
+The frontend connects to the StarkPulse backend API for data fetching and blockchain interactions. See the backend repository for API documentation and setup instructions.
+
+## Contributing
+
+We welcome contributions to StarkPulse! Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## Maintainers
+
 - Divineifed1 👨‍💻
 - Cedarich 👨‍💻
 
-*Contribution:*
-Feel free to open issues and contribute to this project! 🤝
 
-*Conclusion:*
-*StarkPulse* is more than just a news platform; it’s a community. Join us in shaping the future of crypto news and insights. Stay ahead of the curve with *StarkPulse*. 🌟
 
-Below is our figma link
-https://www.figma.com/design/oH6TgNMhQYEGpT5PqewXol/StarkPulse?node-id=1-2&t=5JXg5GmFXbpaZeQs-1
----
-
-### Note on Network Issues:
-Due to network issues, the parsing of the above webpage was unsuccessful. If you need the parsed content from this webpage, please check the validity of the webpage link and try again. If the problem persists, you may need to check the repository's availability or try again later. 🌐
+<p align="center">
+  Built with ❤️ by the StarkPulse Team
+</p>

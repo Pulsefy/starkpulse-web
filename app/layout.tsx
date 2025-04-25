@@ -1,5 +1,5 @@
 import { StarsAnimation } from "@/components/stars-animation";
-import "@/globals.css";
+import "./globals.css";
 import type { Metadata } from "next";
 import {
   Inter,
@@ -48,19 +48,19 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
+// Add this import at the top
+import { StarknetProvider } from "@/providers/starknet-provider";
+import "./globals.css";
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable} font-sans min-h-screen bg-[#0a0a0a] text-white`}
-      >
-        {/* Global animated stars background */}
-        <StarsAnimation />
-        {children}
+    <html lang="en">
+      <body>
+        <StarknetProvider>{children}</StarknetProvider>
       </body>
     </html>
   );

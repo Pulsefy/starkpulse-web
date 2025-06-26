@@ -1,7 +1,3 @@
-
-
-
-          
 # StarkPulse Web ⚡🔒
 
 StarkPulse is a cutting-edge, decentralized crypto news aggregator and portfolio management platform built on the StarkNet ecosystem. This monorepo contains the complete web application stack including frontend, backend API, and data processing modules.
@@ -214,4 +210,20 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 <p align="center">
   Built with ❤️ by the StarkPulse Team
 </p>
+
+# Environment Configuration
+
+This project uses environment variables for configuration. Copy `.env.example` to `.env.development`, `.env.staging`, or `.env.production` as needed and fill in the values.
+
+## Variables
+
+- `DB_HOST`: Database host
+- `DB_PORT`: Database port
+- `DB_USER`: Database user
+- `DB_PASS`: Database password (keep secret!)
+- `API_KEY`: API key for external services (keep secret!)
+- `NODE_ENV`: Application environment (`development`, `staging`, `production`)
+- `PORT`: Port the app runs on (default: 3000)
+
+**Never commit real secrets to version control. Use `.env.example` as a template only.**
         

@@ -1,0 +1,2 @@
+// Logging utilities
+module.exports = {};

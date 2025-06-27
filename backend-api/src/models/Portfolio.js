@@ -1,0 +1,2 @@
+// Portfolio model
+module.exports = {};

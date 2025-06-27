@@ -1,0 +1,2 @@
+// Transaction model
+module.exports = {};

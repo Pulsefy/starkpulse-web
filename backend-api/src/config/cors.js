@@ -1,0 +1,2 @@
+// CORS settings
+module.exports = {};

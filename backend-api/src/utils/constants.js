@@ -1,0 +1,2 @@
+// Application constants
+module.exports = {};

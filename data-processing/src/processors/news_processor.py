@@ -14,11 +14,30 @@ from ..services.cache_service import CacheService, CacheKeys
 from ..models.news_models import NewsArticle, NewsSource, NewsFeed
 from ..utils.logger import setup_logger
 from ..utils.validators import validate_news_article, sanitize_string
+from ..utils.quality_metrics import DataQualityMetrics
+from ..utils.anomaly_detection import AnomalyDetector
+from ..services.alert_service import AlertService
 from ..utils.helpers import parse_datetime, extract_domain, clean_text
 
 logger = setup_logger(__name__)
 
 class NewsProcessor:
+    """
+    Processor for news data collection and processing with validation, anomaly detection, and quality monitoring
+    """
+    def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
+                 news_client: NewsAPIClient):
+        self.db_service = db_service
+        self.cache_service = cache_service
+        self.news_client = news_client
+        self.quality_metrics = DataQualityMetrics()
+        self.alert_service = AlertService()
+        # Crypto-related keywords for filtering
+        self.crypto_keywords = [
+            'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto',
+            'blockchain', 'defi', 'nft', 'altcoin', 'stablecoin', 'mining',
+            'starknet', 'stark', 'layer2', 'l2', 'scaling', 'zk-stark'
+        ]
     """
     Processor for news data collection and processing
     """
@@ -115,8 +134,7 @@ class NewsProcessor:
             Number of articles processed
         """
         logger.info(f"Fetching crypto news from last {hours_back} hours")
-        
-        # Dummy implementation
+        # Dummy implementation with validation, anomaly detection, and quality metrics
         dummy_articles = [
             {
                 "title": "Bitcoin reaches new highs",
@@ -131,12 +149,34 @@ class NewsProcessor:
                 "relevance_score": 0.92
             }
         ]
-        
-        saved_count = self.db_service.save_news_articles(dummy_articles)
-        
+        valid_articles = []
+        for article in dummy_articles:
+            self.quality_metrics.record_total()
+            errors = validate_news_article(article)
+            if errors:
+                self.quality_metrics.record_missing_field()
+                self.alert_service.send_alert(
+                    f"Invalid news article: {errors}",
+                    tags=["validation", "news_article"]
+                )
+                logger.warning(f"Invalid news article: {errors}")
+                continue
+            valid_articles.append(article)
+        # Anomaly detection: flag articles with very high relevance_score
+        scores = [a.get('relevance_score', 0) for a in valid_articles]
+        if scores:
+            anomaly_indices = AnomalyDetector.detect_outliers_iqr(scores)
+            if anomaly_indices:
+                self.quality_metrics.metrics['anomalies_detected'] += len(anomaly_indices)
+                for idx in anomaly_indices:
+                    self.alert_service.send_alert(
+                        f"Anomaly detected in news relevance score: {valid_articles[idx]['title']}",
+                        tags=["anomaly", "news_article"]
+                    )
+        saved_count = self.db_service.save_news_articles(valid_articles)
         # Cache recent news
-        self.cache_service.set("news:recent", dummy_articles[:10], ttl=1800)
-        
+        self.cache_service.set("news:recent", valid_articles[:10], ttl=1800)
+        logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
         return saved_count
     
     def _get_or_create_source(self, domain: str, source_info: Dict[str, Any]) -> Optional[NewsSource]:

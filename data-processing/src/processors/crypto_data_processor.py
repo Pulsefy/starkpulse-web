@@ -13,11 +13,25 @@ from ..services.cache_service import CacheService, CacheKeys
 from ..models.crypto_models import CryptoCurrency, PriceData, MarketData
 from ..utils.logger import setup_logger
 from ..utils.validators import validate_price_data
+from ..utils.quality_metrics import DataQualityMetrics
+from ..utils.anomaly_detection import AnomalyDetector
+from ..services.alert_service import AlertService
 from ..utils.helpers import calculate_percentage_change
 
 logger = setup_logger(__name__)
 
 class CryptoDataProcessor:
+    """
+    Processor for cryptocurrency data collection and processing with validation, anomaly detection, and quality monitoring
+    """
+    
+    def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
+                 cmc_client: CoinMarketCapClient):
+        self.db_service = db_service
+        self.cache_service = cache_service
+        self.cmc_client = cmc_client
+        self.quality_metrics = DataQualityMetrics()
+        self.alert_service = AlertService()
     """
     Processor for cryptocurrency data collection and processing
     """
@@ -107,26 +121,23 @@ class CryptoDataProcessor:
             for i in range(0, len(cryptos), batch_size):
                 batch = cryptos[i:i + batch_size]
                 batch_symbols = [crypto.symbol for crypto in batch]
-                
                 try:
                     async with self.cmc_client:
                         response = await self.cmc_client.get_quotes(batch_symbols)
-                    
                     if 'data' not in response:
                         logger.error("Invalid response format from CoinMarketCap")
                         continue
-                    
                     price_data_batch = []
-                    
+                    batch_prices = []
                     for crypto in batch:
                         if crypto.symbol in response['data']:
                             quote_data = response['data'][crypto.symbol]
                             usd_quote = quote_data.get('quote', {}).get('USD', {})
-                            
                             if usd_quote:
+                                price = Decimal(str(usd_quote.get('price', 0)))
                                 price_data = {
                                     'cryptocurrency_id': crypto.id,
-                                    'price_usd': Decimal(str(usd_quote.get('price', 0))),
+                                    'price_usd': price,
                                     'percent_change_1h': usd_quote.get('percent_change_1h'),
                                     'percent_change_24h': usd_quote.get('percent_change_24h'),
                                     'percent_change_7d': usd_quote.get('percent_change_7d'),
@@ -135,38 +146,51 @@ class CryptoDataProcessor:
                                     'market_cap': usd_quote.get('market_cap'),
                                     'timestamp': datetime.utcnow()
                                 }
-                                
+                                self.quality_metrics.record_total()
                                 # Validate price data
                                 validation_errors = validate_price_data(price_data)
-                                if not validation_errors:
-                                    price_data_batch.append(price_data)
-                                    
-                                    # Cache the price data
-                                    cache_key = CacheKeys.crypto_price(crypto.symbol)
-                                    self.cache_service.set(cache_key, {
-                                        'price': float(price_data['price_usd']),
-                                        'change_24h': price_data['percent_change_24h'],
-                                        'timestamp': price_data['timestamp'].isoformat()
-                                    }, ttl=300)  # 5 minutes
-                                else:
+                                if validation_errors:
+                                    self.quality_metrics.record_missing_field()
+                                    self.alert_service.send_alert(
+                                        f"Invalid price data for {crypto.symbol}: {validation_errors}",
+                                        tags=["validation", "price_data"]
+                                    )
                                     logger.warning(f"Invalid price data for {crypto.symbol}: {validation_errors}")
-                    
+                                    continue
+                                price_data_batch.append(price_data)
+                                batch_prices.append(float(price))
+                                # Cache the price data
+                                cache_key = CacheKeys.crypto_price(crypto.symbol)
+                                self.cache_service.set(cache_key, {
+                                    'price': float(price_data['price_usd']),
+                                    'change_24h': price_data['percent_change_24h'],
+                                    'timestamp': price_data['timestamp'].isoformat()
+                                }, ttl=300)  # 5 minutes
+                    # Anomaly detection on batch prices
+                    if batch_prices:
+                        anomaly_indices = AnomalyDetector.detect_price_anomalies(batch_prices)
+                        if anomaly_indices:
+                            self.quality_metrics.metrics['anomalies_detected'] += len(anomaly_indices)
+                            for idx in anomaly_indices:
+                                symbol = batch[idx].symbol
+                                self.alert_service.send_alert(
+                                    f"Anomaly detected in price for {symbol}",
+                                    tags=["anomaly", "price_data"]
+                                )
                     # Bulk save price data
                     if price_data_batch:
                         saved_count = self.db_service.save_price_data(price_data_batch)
                         total_processed += saved_count
                         logger.debug(f"Saved {saved_count} price records for batch")
-                    
                     # Rate limiting delay
                     await asyncio.sleep(1)
-                    
                 except Exception as e:
                     logger.error(f"Error processing price data batch: {str(e)}")
                     continue
             
             logger.info(f"Successfully updated {total_processed} price records")
+            logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
             return total_processed
-            
         except Exception as e:
             logger.error(f"Error updating price data: {str(e)}")
             return 0

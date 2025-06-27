@@ -12,10 +12,21 @@ from ..models.portfolio_models import Portfolio, Position, Transaction, Transact
 from ..models.crypto_models import CryptoCurrency, PriceData
 from ..utils.logger import setup_logger
 from ..utils.helpers import calculate_percentage_change, safe_divide
+from ..utils.quality_metrics import DataQualityMetrics
+from ..utils.anomaly_detection import AnomalyDetector
+from ..services.alert_service import AlertService
 
 logger = setup_logger(__name__)
 
 class PortfolioProcessor:
+    """
+    Processor for portfolio analytics and performance calculations with validation, anomaly detection, and quality monitoring
+    """
+    def __init__(self, db_service: DatabaseService, cache_service: CacheService):
+        self.db_service = db_service
+        self.cache_service = cache_service
+        self.quality_metrics = DataQualityMetrics()
+        self.alert_service = AlertService()
     """
     Processor for portfolio analytics and performance calculations
     """
@@ -51,31 +62,43 @@ class PortfolioProcessor:
             
             for portfolio in portfolios:
                 try:
+                    self.quality_metrics.record_total()
                     # Calculate portfolio metrics
                     metrics = await self._calculate_portfolio_metrics(portfolio.id)
-                    
-                    if metrics:
-                        # Update portfolio with calculated values
-                        self.db_service.update_portfolio_value(
-                            portfolio.id,
-                            metrics['total_value'],
-                            metrics['total_pnl']
+                    if not metrics:
+                        self.quality_metrics.record_missing_field()
+                        self.alert_service.send_alert(
+                            f"Portfolio {portfolio.id} missing metrics.",
+                            tags=["validation", "portfolio"]
                         )
-                        
-                        # Cache portfolio metrics
-                        cache_key = CacheKeys.portfolio_value(portfolio.id)
-                        self.cache_service.set(cache_key, metrics, ttl=300)  # 5 minutes
-                        
-                        updated_count += 1
-                        logger.debug(f"Updated portfolio {portfolio.id}: ${metrics['total_value']:.2f}")
-                
+                        logger.warning(f"Portfolio {portfolio.id} missing metrics.")
+                        continue
+                    # Anomaly detection: flag very high/low PnL
+                    pnl = metrics.get('total_pnl', 0)
+                    if abs(pnl) > 1_000_000:  # Example threshold
+                        self.quality_metrics.metrics['anomalies_detected'] += 1
+                        self.alert_service.send_alert(
+                            f"Anomaly detected in portfolio {portfolio.id} PnL: {pnl}",
+                            tags=["anomaly", "portfolio"]
+                        )
+                    # Update portfolio with calculated values
+                    self.db_service.update_portfolio_value(
+                        portfolio.id,
+                        metrics['total_value'],
+                        metrics['total_pnl']
+                    )
+                    # Cache portfolio metrics
+                    cache_key = CacheKeys.portfolio_value(portfolio.id)
+                    self.cache_service.set(cache_key, metrics, ttl=300)  # 5 minutes
+                    updated_count += 1
+                    logger.debug(f"Updated portfolio {portfolio.id}: ${metrics['total_value']:.2f}")
                 except Exception as e:
                     logger.error(f"Error updating portfolio {portfolio.id}: {str(e)}")
                     continue
             
             logger.info(f"Successfully updated {updated_count} portfolios")
+            logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
             return updated_count
-            
         except Exception as e:
             logger.error(f"Error updating portfolio values: {str(e)}")
             return 0

@@ -1,0 +1,101 @@
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+pytest-xdist>=3.3.1
+pytest-benchmark>=4.0.0
+pytest-html>=4.1.1
+coverage>=7.3.0
+factory-boy>=3.3.0
+faker>=19.12.0
+responses>=0.23.3
+
+# Code quality and formatting
+black>=23.9.1
+isort>=5.12.0
+flake8>=6.1.0
+pylint>=3.0.0
+mypy>=1.6.0
+bandit>=1.7.5
+safety>=2.3.5
+pre-commit>=3.5.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=1.3.0
+sphinx-autodoc-typehints>=1.24.0
+myst-parser>=2.0.0
+mkdocs>=1.5.3
+mkdocs-material>=9.4.0
+
+# Development tools
+ipdb>=0.13.13
+pdbpp>=0.10.3
+jupyter>=1.0.0
+notebook>=7.0.0
+jupyterlab>=4.0.0
+
+# Performance profiling
+py-spy>=0.3.14
+memory-profiler>=0.61.0
+line-profiler>=4.1.1
+pyflame>=1.6.7
+
+# API development and testing
+httpie>=3.2.2
+postman>=0.1.0
+locust>=2.17.0
+
+# Database tools
+alembic>=1.12.0
+pgcli>=3.5.0
+redis-cli>=0.1.0
+
+# Linting and type checking
+vulture>=2.10
+pycodestyle>=2.11.0
+pydocstyle>=6.3.0
+darglint>=1.8.1
+
+# Security scanning
+pip-audit>=2.6.1
+semgrep>=1.45.0
+
+# Build and packaging
+build>=1.0.0
+twine>=4.0.2
+wheel>=0.41.0
+setuptools>=68.2.0
+
+# Environment management
+python-decouple>=3.8
+environs>=10.0.0
+
+# Git hooks and workflow
+gitpython>=3.1.37
+pre-commit-hooks>=4.5.0
+
+# Debugging and monitoring
+debugpy>=1.8.0
+watchdog>=3.0.0
+
+# Data visualization for development
+plotly-dash>=2.14.0
+streamlit>=1.28.0
+
+# API documentation
+swagger-ui-bundle>=0.0.9
+redoc>=2.1.0
+
+# Load testing
+artillery>=0.1.0
+
+# Container and deployment tools
+docker>=6.1.0
+docker-compose>=1.29.0
+
+# Optional: Additional development tools (uncomment if needed)
+# tox>=4.11.0
+# nox>=2023.4.22
+# invoke>=2.2.0

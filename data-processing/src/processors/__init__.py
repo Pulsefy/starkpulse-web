@@ -1,5 +1,5 @@
 """
-Data processors package for StarkPulse
+Data processors package
 """
 
 from .crypto_data_processor import CryptoDataProcessor
@@ -9,7 +9,7 @@ from .starknet_processor import StarkNetProcessor
 
 __all__ = [
     'CryptoDataProcessor',
-    'NewsProcessor', 
-    'PortfolioProcessor',
+    'NewsProcessor',
+    'PortfolioProcessor', 
     'StarkNetProcessor'
 ]

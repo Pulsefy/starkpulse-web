@@ -4,7 +4,6 @@ Logging configuration for StarkPulse Data Processing
 
 import os
 import logging
-from datetime import datetime
 from pathlib import Path
 
 def setup_logger(name: str, log_level: str = 'INFO') -> logging.Logger:
@@ -40,8 +39,7 @@ def setup_logger(name: str, log_level: str = 'INFO') -> logging.Logger:
     )
     
     # File handler
-    log_file = log_dir / f'data_processing_{datetime.now().strftime("%Y%m%d")}.log'
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(log_dir / 'data_processing.log')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(file_formatter)
     

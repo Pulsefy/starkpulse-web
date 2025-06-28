@@ -2,11 +2,9 @@ const express = require("express")
 const authController = require("../controllers/authController")
 const { validate } = require("../middleware/validation")
 const { requireAuth, requireGuest } = require("../middleware/auth")
-const { authLimiter } = require("../middleware/rateLimiter")
 
 const router = express.Router()
 
-router.use(authLimiter)
 
 // ==========================
 // Authentication Routes

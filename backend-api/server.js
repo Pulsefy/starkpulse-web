@@ -4,10 +4,12 @@ const cors = require("cors")
 const helmet = require("helmet")
 const compression = require("compression")
 const morgan = require("morgan")
-const { limiter } = require("./src/middleware/rateLimiter")
+const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
 require("dotenv").config()
 
 const { errorHandler } = require("./src/middleware/errorHandler")
+const authRoutes = require("./src/routes/auth")
+const userRoutes = require("./src/routes/users")
 
 // ==========================
 // App Initialization
@@ -65,7 +67,8 @@ mongoose
 // ==========================
 // API Routes
 // ==========================
-
+app.use("/api/auth", authLimiter, authRoutes)
+app.use("/api/user", userRoutes)
 
 // ==========================
 // Health Check Endpoint

@@ -1,52 +1,58 @@
 const express = require("express")
 const mongoose = require("mongoose")
-const session = require("express-session")
-const MongoStore = require("connect-mongo")
 const cors = require("cors")
 const helmet = require("helmet")
 const compression = require("compression")
 const morgan = require("morgan")
-require("dotenv").config()
 const { limiter } = require("./src/middleware/rateLimiter")
+require("dotenv").config()
 
+// const { errorHandler } = require("./middleware/errorHandler")
 
+// ==========================
+// App Initialization
+// ==========================
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// ===========================
-// Security middleware
-// ===========================
+// ==========================
+// Global Middleware
+// ==========================
 app.use(helmet())
 app.use(compression())
+
+// ==========================
+// Rate Limiting
+// ==========================
 app.use(limiter)
 
 
-// ===========================
-// CORS configuration
-// ===========================
+// ==========================
+// CORS Configuration
+// ==========================
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 )
 
-// ===========================
-// Body parsing middleware
-// ===========================
+// ==========================
+// Body Parsing Middleware
+// ==========================
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
-// ===========================
-// Logging
-// ===========================
+// ==========================
+// HTTP Logging
+// ==========================
 app.use(morgan("combined"))
 
-// ===========================
-// Database connection
-// ===========================
+// ==========================
+// MongoDB Connection
+// ==========================
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
@@ -55,32 +61,15 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err))
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      touchAfter: 24 * 3600, 
-    }),
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000, 
-      sameSite: "lax",
-    },
-    name: "sessionId",
-  }),
-)
 
-// ===========================
-// Routes
-// ===========================
+// ==========================
+// API Routes
+// ==========================
 
-// ===========================
-// Health check endpoint
-// ===========================
+
+// ==========================
+// Health Check Endpoint
+// ==========================
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -89,9 +78,10 @@ app.get("/api/health", (req, res) => {
   })
 })
 
-// ===========================
-// 404 handler
-// ===========================
+// ==========================
+// Error Handlers
+// ==========================
+// app.use(errorHandler)
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
@@ -99,11 +89,9 @@ app.use("*", (req, res) => {
   })
 })
 
-
-
-// ===========================
-// Graceful shutdown
-// ===========================
+// ==========================
+// Graceful Shutdown
+// ==========================
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully")
   mongoose.connection.close(() => {
@@ -112,8 +100,11 @@ process.on("SIGTERM", () => {
   })
 })
 
+// ==========================
+// Server Start
+// ==========================
 app.listen(PORT, () => {
-  console.log(`Server running on port http://localhost:${PORT}`)
+  console.log(`Server running on port ${PORT}`)
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`)
 })
 

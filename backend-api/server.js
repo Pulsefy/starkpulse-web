@@ -7,7 +7,7 @@ const morgan = require("morgan")
 const { limiter } = require("./src/middleware/rateLimiter")
 require("dotenv").config()
 
-// const { errorHandler } = require("./middleware/errorHandler")
+const { errorHandler } = require("./src/middleware/errorHandler")
 
 // ==========================
 // App Initialization
@@ -81,7 +81,7 @@ app.get("/api/health", (req, res) => {
 // ==========================
 // Error Handlers
 // ==========================
-// app.use(errorHandler)
+app.use(errorHandler)
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from decimal import Decimal
 
-from ..services.api_client import CoinMarketCapClient, APIClient
+from ..services.api_client import CoinMarketCapClient, CoinGeckoClient, APIClient
 from ..services.database_service import DatabaseService
 from ..services.cache_service import CacheService, CacheKeys
 from ..models.crypto_models import CryptoCurrency, PriceData, MarketData
@@ -20,27 +20,136 @@ from ..utils.helpers import calculate_percentage_change
 
 logger = setup_logger(__name__)
 
-class CryptoDataProcessor:
     """
     Processor for cryptocurrency data collection and processing with validation, anomaly detection, and quality monitoring
     """
-    
     def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
-                 cmc_client: CoinMarketCapClient):
+                 cmc_client: CoinMarketCapClient, cg_client: CoinGeckoClient = None):
         self.db_service = db_service
         self.cache_service = cache_service
         self.cmc_client = cmc_client
+        self.cg_client = cg_client or CoinGeckoClient()
         self.quality_metrics = DataQualityMetrics()
         self.alert_service = AlertService()
-    """
-    Processor for cryptocurrency data collection and processing
-    """
-    
-    def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
-                 cmc_client: CoinMarketCapClient):
-        self.db_service = db_service
-        self.cache_service = cache_service
-        self.cmc_client = cmc_client
+
+    async def update_prices_realtime(self, symbols: List[str] = None, use_coingecko: bool = False) -> int:
+        """Update cryptocurrency prices in real-time from CoinGecko or CoinMarketCap"""
+        logger.info(f"Updating real-time prices (CoinGecko: {use_coingecko})")
+        try:
+            if symbols:
+                cryptos = [self.db_service.get_cryptocurrency_by_symbol(symbol) for symbol in symbols]
+                cryptos = [c for c in cryptos if c is not None]
+            else:
+                cryptos = self.db_service.get_all_cryptocurrencies(active_only=True)
+            if not cryptos:
+                logger.warning("No cryptocurrencies found to update")
+                return 0
+            batch_size = 50 if use_coingecko else 100
+            total_processed = 0
+            for i in range(0, len(cryptos), batch_size):
+                batch = cryptos[i:i + batch_size]
+                batch_symbols = [crypto.symbol.lower() for crypto in batch]
+                try:
+                    if use_coingecko:
+                        async with self.cg_client:
+                            response = await self.cg_client.get_price(batch_symbols)
+                        # Normalize CoinGecko response
+                        for crypto in batch:
+                            price = response.get(crypto.symbol.lower(), {}).get('usd')
+                            if price is not None:
+                                price_data = {
+                                    'cryptocurrency_id': crypto.id,
+                                    'price_usd': Decimal(str(price)),
+                                    'timestamp': datetime.utcnow()
+                                }
+                                validation_errors = validate_price_data(price_data)
+                                self.quality_metrics.record_total()
+                                if validation_errors:
+                                    self.quality_metrics.record_missing_field()
+                                    self.alert_service.send_alert(
+                                        f"Invalid CoinGecko price data for {crypto.symbol}: {validation_errors}",
+                                        tags=["validation", "price_data"]
+                                    )
+                                    continue
+                                self.db_service.save_price_data([price_data])
+                                total_processed += 1
+                    else:
+                        async with self.cmc_client:
+                            response = await self.cmc_client.get_quotes(batch_symbols)
+                        if 'data' not in response:
+                            logger.error("Invalid response format from CoinMarketCap")
+                            continue
+                        for crypto in batch:
+                            if crypto.symbol in response['data']:
+                                usd_quote = response['data'][crypto.symbol].get('quote', {}).get('USD', {})
+                                if usd_quote:
+                                    price_data = {
+                                        'cryptocurrency_id': crypto.id,
+                                        'price_usd': Decimal(str(usd_quote.get('price', 0))),
+                                        'timestamp': datetime.utcnow()
+                                    }
+                                    validation_errors = validate_price_data(price_data)
+                                    self.quality_metrics.record_total()
+                                    if validation_errors:
+                                        self.quality_metrics.record_missing_field()
+                                        self.alert_service.send_alert(
+                                            f"Invalid CMC price data for {crypto.symbol}: {validation_errors}",
+                                            tags=["validation", "price_data"]
+                                        )
+                                        continue
+                                    self.db_service.save_price_data([price_data])
+                                    total_processed += 1
+                except Exception as e:
+                    logger.error(f"Error processing real-time price batch: {str(e)}")
+                    continue
+            logger.info(f"Successfully updated {total_processed} real-time price records")
+            logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
+            return total_processed
+        except Exception as e:
+            logger.error(f"Error updating real-time prices: {str(e)}")
+            return 0
+
+    async def backfill_historical_prices(self, symbol: str, days: int = 30, use_coingecko: bool = True) -> int:
+        """Backfill historical price data from CoinGecko or CoinMarketCap"""
+        logger.info(f"Backfilling historical prices for {symbol} (days: {days}, CoinGecko: {use_coingecko})")
+        try:
+            crypto = self.db_service.get_cryptocurrency_by_symbol(symbol)
+            if not crypto:
+                logger.warning(f"Cryptocurrency {symbol} not found")
+                return 0
+            if use_coingecko:
+                async with self.cg_client:
+                    response = await self.cg_client.get_market_chart(symbol.lower(), days=days)
+                prices = response.get('prices', [])
+                count = 0
+                for price_point in prices:
+                    ts, price = price_point
+                    price_data = {
+                        'cryptocurrency_id': crypto.id,
+                        'price_usd': Decimal(str(price)),
+                        'timestamp': datetime.utcfromtimestamp(ts / 1000)
+                    }
+                    validation_errors = validate_price_data(price_data)
+                    self.quality_metrics.record_total()
+                    if validation_errors:
+                        self.quality_metrics.record_missing_field()
+                        self.alert_service.send_alert(
+                            f"Invalid historical price data for {symbol}: {validation_errors}",
+                            tags=["validation", "price_data"]
+                        )
+                        continue
+                    self.db_service.save_price_data([price_data])
+                    count += 1
+                logger.info(f"Backfilled {count} historical price records for {symbol}")
+                logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
+                return count
+            else:
+                # Implement CMC historical backfill if needed
+                logger.warning("CMC historical backfill not implemented.")
+                return 0
+        except Exception as e:
+            logger.error(f"Error backfilling historical prices for {symbol}: {str(e)}")
+            return 0
     
     async def update_cryptocurrency_listings(self, limit: int = 200) -> int:
         """

@@ -1,3 +1,24 @@
+class CoinGeckoClient(APIClient):
+    """CoinGecko API client"""
+    def __init__(self):
+        super().__init__('https://api.coingecko.com/api/v3/')
+        self.rate_limiter = RateLimiter(max_requests=50, time_window=60)  # CoinGecko free tier
+
+    async def get_price(self, ids: List[str], vs_currencies: List[str] = ["usd"]) -> Dict[str, Any]:
+        await self.rate_limiter.acquire()
+        params = {
+            'ids': ','.join(ids),
+            'vs_currencies': ','.join(vs_currencies)
+        }
+        return await self.get('simple/price', params=params)
+
+    async def get_market_chart(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> Dict[str, Any]:
+        await self.rate_limiter.acquire()
+        params = {
+            'vs_currency': vs_currency,
+            'days': days
+        }
+        return await self.get(f'coins/{coin_id}/market_chart', params=params)
 """
 Generic API client for external service integrations
 """

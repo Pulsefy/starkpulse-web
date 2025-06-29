@@ -144,9 +144,48 @@ logger = setup_logger(__name__)
                 logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
                 return count
             else:
-                # Implement CMC historical backfill if needed
-                logger.warning("CMC historical backfill not implemented.")
-                return 0
+                # CoinMarketCap historical backfill implementation
+                from datetime import timezone
+                import math
+                async with self.cmc_client:
+                    # CMC API may have a max range per call, so we loop by day
+                    now = datetime.now(timezone.utc)
+                    start_time = now - timedelta(days=days)
+                    count = 0
+                    for day in range(days):
+                        day_start = (start_time + timedelta(days=day)).replace(hour=0, minute=0, second=0, microsecond=0)
+                        day_end = day_start + timedelta(days=1)
+                        time_start_iso = day_start.isoformat().replace('+00:00', 'Z')
+                        time_end_iso = day_end.isoformat().replace('+00:00', 'Z')
+                        response = await self.cmc_client.get_historical_quotes(symbol, time_start_iso, time_end_iso, interval="hourly")
+                        quotes = response.get('data', {}).get('quotes', [])
+                        for quote in quotes:
+                            price = quote.get('quote', {}).get('USD', {}).get('price')
+                            timestamp = quote.get('timestamp')
+                            if price is not None and timestamp:
+                                try:
+                                    ts = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                                except Exception:
+                                    continue
+                                price_data = {
+                                    'cryptocurrency_id': crypto.id,
+                                    'price_usd': Decimal(str(price)),
+                                    'timestamp': ts
+                                }
+                                validation_errors = validate_price_data(price_data)
+                                self.quality_metrics.record_total()
+                                if validation_errors:
+                                    self.quality_metrics.record_missing_field()
+                                    self.alert_service.send_alert(
+                                        f"Invalid CMC historical price data for {symbol}: {validation_errors}",
+                                        tags=["validation", "price_data"]
+                                    )
+                                    continue
+                                self.db_service.save_price_data([price_data])
+                                count += 1
+                    logger.info(f"Backfilled {count} historical price records for {symbol} from CoinMarketCap")
+                    logger.info(f"Data quality metrics: {self.quality_metrics.get_metrics()}")
+                    return count
         except Exception as e:
             logger.error(f"Error backfilling historical prices for {symbol}: {str(e)}")
             return 0

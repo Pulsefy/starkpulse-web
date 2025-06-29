@@ -88,22 +88,39 @@ class APIClient:
 
 class CoinMarketCapClient(APIClient):
     """CoinMarketCap API client"""
-    
     def __init__(self, settings: Settings):
         super().__init__('https://pro-api.coinmarketcap.com/v1/')
         self.api_key = settings.coinmarketcap_api_key
-    
+
     async def get_listings(self, start: int = 1, limit: int = 100) -> Dict[str, Any]:
-        """Get cryptocurrency listings"""
         headers = {'X-CMC_PRO_API_KEY': self.api_key}
         params = {'start': start, 'limit': limit}
         return await self.get('cryptocurrency/listings/latest', params=params, headers=headers)
-    
+
     async def get_quotes(self, symbols: List[str]) -> Dict[str, Any]:
-        """Get price quotes for symbols"""
         headers = {'X-CMC_PRO_API_KEY': self.api_key}
         params = {'symbol': ','.join(symbols)}
         return await self.get('cryptocurrency/quotes/latest', params=params, headers=headers)
+
+    async def get_historical_quotes(self, symbol: str, time_start: str, time_end: str, interval: str = "daily") -> Dict[str, Any]:
+        """
+        Get historical price quotes for a symbol from CoinMarketCap
+        Args:
+            symbol: Cryptocurrency symbol (e.g., 'BTC')
+            time_start: Start time in ISO 8601 (e.g., '2023-01-01T00:00:00Z')
+            time_end: End time in ISO 8601 (e.g., '2023-01-31T00:00:00Z')
+            interval: 'daily', 'hourly', etc.
+        Returns:
+            API response dict
+        """
+        headers = {'X-CMC_PRO_API_KEY': self.api_key}
+        params = {
+            'symbol': symbol,
+            'time_start': time_start,
+            'time_end': time_end,
+            'interval': interval
+        }
+        return await self.get('cryptocurrency/quotes/historical', params=params, headers=headers)
 
 class NewsAPIClient(APIClient):
     """News API client"""

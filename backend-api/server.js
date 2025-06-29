@@ -1,40 +1,111 @@
-const express = require("express");
-const app = express();
-const PORT = process.env.PORT || 3000;
+const express = require("express")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const helmet = require("helmet")
+const compression = require("compression")
+const morgan = require("morgan")
+const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
+require("dotenv").config()
 
-// Import middleware
-const { security, cors, rateLimiter, errorHandler } = require('./src/middleware');
+const { errorHandler } = require("./src/middleware/errorHandler")
+const authRoutes = require("./src/routes/auth")
+const userRoutes = require("./src/routes/users")
 
-// Apply security middleware
-app.use(security);
+// ==========================
+// App Initialization
+// ==========================
+const app = express()
+const PORT = process.env.PORT || 3000
 
-// Apply CORS
-app.use(cors);
+// ==========================
+// Global Middleware
+// ==========================
+app.use(helmet())
+app.use(compression())
 
-// Apply general rate limiting globally
-app.use(rateLimiter.generalLimiter);
+// ==========================
+// Rate Limiting
+// ==========================
+app.use(limiter)
 
-// Parse JSON and urlencoded bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Example: Apply stricter rate limiting to auth routes
-app.use('/auth', rateLimiter.authLimiter);
+// ==========================
+// CORS Configuration
+// ==========================
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+)
 
-// Basic route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to your Express.js API!" });
-});
+// ==========================
+// Body Parsing Middleware
+// ==========================
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
-// Health check route
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
-});
+// ==========================
+// HTTP Logging
+// ==========================
+app.use(morgan("combined"))
 
-// Error handler (should be last)
-app.use(errorHandler);
+// ==========================
+// MongoDB Connection
+// ==========================
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err))
 
-// Start server
+
+// ==========================
+// API Routes
+// ==========================
+app.use("/api/auth", authLimiter, authRoutes)
+app.use("/api/user", userRoutes)
+
+// ==========================
+// Health Check Endpoint
+// ==========================
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  })
+})
+
+// ==========================
+// Error Handlers
+// ==========================
+app.use(errorHandler)
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  })
+})
+
+// ==========================
+// Graceful Shutdown
+// ==========================
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down gracefully")
+  mongoose.connection.close(() => {
+    console.log("MongoDB connection closed")
+    process.exit(0)
+  })
+})
+
+// ==========================
+// Server Start
+// ==========================
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`)

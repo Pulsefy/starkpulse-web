@@ -102,31 +102,8 @@ const requireOwnership = (req, res, next) => {
   next();
 };
 
-// ==========================
-// Optional auth middleware (doesn't fail if no token)
-// ==========================
-// const optionalAuth = async (req, res, next) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-
-//     if (authHeader) {
-//       const token = jwtService.jwt.extractTokenFromHeader(authHeader);
-//       const decoded = jwtService.jwt.verifyAccessToken(token);
-
-//       const user = await User.findById(decoded.userId);
-//       if (user && user.isActive) {
-//         req.user = user;
-//         req.token = token;
-//       }
-//     }
-//   } catch (error) {}
-
-//   next();
-// };
-
 module.exports = {
   requireAuth,
   requireGuest,
   requireOwnership,
-  //   optionalAuth,
 };

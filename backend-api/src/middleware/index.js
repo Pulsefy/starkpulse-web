@@ -6,4 +6,5 @@ module.exports = {
   rateLimiter: require('./rateLimiter'),
   cors: require('./cors'),
   logger: require('./logger'),
+  security: require('./security'),
 };

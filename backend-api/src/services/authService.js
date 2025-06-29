@@ -7,58 +7,66 @@ class AuthService {
   // ==========================
   //Register a new user
   // ==========================
-  async registerUser(userData, deviceInfo) {
-    const { firstName, lastName, email, password } = userData;
+ async registerUser(userData, deviceInfo) {
+  const { firstName, lastName, email, password } = userData;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new Error("User with this email already exists");
-    }
-
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password,
-    });
-
-    await user.save();
-
-    const tokenPayload = {
-      userId: user._id,
-      email: user.email,
-    };
-
-    const tokens = jwtService.generateTokenPair(tokenPayload);
-
-    const refreshTokenExpiry = new Date();
-    // 7 days
-    refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + 7);
-
-    await user.addRefreshToken(
-      jwtService.hashToken(tokens.refreshToken),
-      refreshTokenExpiry,
-      deviceInfo
-    );
-
-    try {
-      await emailService.sendWelcomeEmail(user.email, user.firstName);
-    } catch (emailError) {
-      console.error("Failed to send welcome email:", emailError);
-    }
-
-    return {
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        preferences: user.preferences,
-        privacy: user.privacy,
-      },
-      tokens,
-    };
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User with this email already exists");
   }
+
+  const user = new User({
+    firstName,
+    lastName,
+    email,
+    password,
+    emailVerified: false,
+  });
+
+  const verificationToken = user.createEmailVerificationToken();
+  await user.save();
+
+  try {
+    await emailService.sendEmailVerificationEmail(
+      user.email,
+      user.firstName,
+      verificationToken
+    );
+  } catch (emailError) {
+    console.error("Failed to send verification email:", emailError);
+    throw new Error("Failed to send verification email");
+  }
+
+  const tokenPayload = {
+    userId: user._id,
+    email: user.email,
+    emailVerified: false, 
+  };
+
+  const tokens = jwtService.generateTokenPair(tokenPayload);
+
+  const refreshTokenExpiry = new Date();
+  refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + 7);
+
+  await user.addRefreshToken(
+    jwtService.hashToken(tokens.refreshToken),
+    refreshTokenExpiry,
+    deviceInfo
+  );
+
+  return {
+    user: {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      preferences: user.preferences,
+      privacy: user.privacy,
+    },
+    tokens,
+  };
+}
 
   // ==========================
   //Login user
@@ -281,6 +289,32 @@ class AuthService {
       createdAt: user.createdAt,
     };
   }
+
+  async verifyEmail(verificationToken) {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(verificationToken)
+    .digest("hex");
+
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new Error("Invalid or expired verification token");
+  }
+
+  user.emailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save();
+
+  return {
+    success: true,
+    message: "Email verified successfully",
+  };
+}
 }
 
 module.exports = new AuthService();

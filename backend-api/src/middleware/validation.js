@@ -1,4 +1,4 @@
-const Joi = require("joi")
+const Joi = require("joi");
 
 // ==========================
 // Validation schemas
@@ -34,7 +34,9 @@ const schemas = {
     password: Joi.string()
       .min(8)
       .max(128)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+      .pattern(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+      )
       .required()
       .messages({
         "string.pattern.base":
@@ -42,9 +44,12 @@ const schemas = {
         "string.min": "Password must be at least 8 characters long",
         "string.max": "Password cannot exceed 128 characters",
       }),
-    confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
-      "any.only": "Passwords do not match",
-    }),
+    confirmPassword: Joi.string()
+      .valid(Joi.ref("password"))
+      .required()
+      .messages({
+        "any.only": "Passwords do not match",
+      }),
     agreeToTerms: Joi.boolean().valid(true).required(),
     agreeToPrivacy: Joi.boolean().valid(true).required(),
   }),
@@ -89,7 +94,9 @@ const schemas = {
     password: Joi.string()
       .min(8)
       .max(128)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+      .pattern(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+      )
       .required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
   }),
@@ -99,11 +106,18 @@ const schemas = {
     newPassword: Joi.string()
       .min(8)
       .max(128)
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+      .pattern(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+      )
       .required(),
     confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required(),
   }),
-}
+  verifyEmail: Joi.object({
+    token: Joi.string().required().messages({
+      "string.empty": "Verification token is required",
+    }),
+  }),
+};
 
 // ==========================
 // Validation middleware factory
@@ -113,24 +127,25 @@ const validate = (schema) => {
     const { error, value } = schemas[schema].validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
-    })
+    });
 
     if (error) {
       const errors = error.details.map((detail) => ({
         field: detail.path.join("."),
         message: detail.message,
-      }))
+      }));
 
       return res.status(400).json({
         success: false,
         message: "Validation failed",
         errors,
-      })
+      });
     }
 
-    req.validatedData = value
-    next()
-  }
-}
+    req.validatedData = value;
+    next();
+  };
+};
 
-module.exports = { validate }
+
+module.exports = { validate, validateQuery };

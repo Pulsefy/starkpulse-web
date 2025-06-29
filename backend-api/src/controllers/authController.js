@@ -281,6 +281,37 @@ class AuthController {
       });
     }
   }
+
+  async verifyEmail(req, res) {
+    try {
+      const { token } = req.validateData;
+
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          message: "Verification token is required",
+        });
+      }
+
+      const result = await authService.verifyEmail(token);
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Email verification error:", error);
+
+      if (error.message === "Invalid or expired verification token") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or expired verification token",
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: "Email verification failed",
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();

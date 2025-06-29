@@ -28,7 +28,12 @@ const requireAuth = async (req, res, next) => {
         message: "User not found or inactive",
       });
     }
-
+    if (!req.user.emailVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email address to access this resource",
+      });
+    }
     // ==========================
     // Check if token was issued before password change
     // ==========================
@@ -78,8 +83,7 @@ const requireGuest = (req, res, next) => {
         success: false,
         message: "Already authenticated",
       });
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   next();
@@ -124,5 +128,5 @@ module.exports = {
   requireAuth,
   requireGuest,
   requireOwnership,
-//   optionalAuth,
+  //   optionalAuth,
 };

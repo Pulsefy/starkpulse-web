@@ -1,6 +1,6 @@
 const express = require("express")
 const authController = require("../controllers/authController")
-const { validate } = require("../middleware/validation")
+const { validate  } = require("../middleware/validation")
 const { requireAuth, requireGuest } = require("../middleware/auth")
 
 const router = express.Router()
@@ -18,6 +18,7 @@ router.post("/logout-all", requireAuth, authController.logoutAll)
 // ==========================
 // Password Management Routes
 // ==========================
+router.get("/verify-email", requireGuest, validate("verifyEmail") ,authController.verifyEmail)
 router.post("/forgot-password", requireGuest, validate("forgotPassword"), authController.forgotPassword)
 router.post("/reset-password", requireGuest, validate("resetPassword"), authController.resetPassword)
 

@@ -1,0 +1,2 @@
+// Redis configuration
+module.exports = {};

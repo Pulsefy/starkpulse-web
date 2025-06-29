@@ -1,3 +1,24 @@
+class CoinGeckoClient(APIClient):
+    """CoinGecko API client"""
+    def __init__(self):
+        super().__init__('https://api.coingecko.com/api/v3/')
+        self.rate_limiter = RateLimiter(max_requests=50, time_window=60)  # CoinGecko free tier
+
+    async def get_price(self, ids: List[str], vs_currencies: List[str] = ["usd"]) -> Dict[str, Any]:
+        await self.rate_limiter.acquire()
+        params = {
+            'ids': ','.join(ids),
+            'vs_currencies': ','.join(vs_currencies)
+        }
+        return await self.get('simple/price', params=params)
+
+    async def get_market_chart(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> Dict[str, Any]:
+        await self.rate_limiter.acquire()
+        params = {
+            'vs_currency': vs_currency,
+            'days': days
+        }
+        return await self.get(f'coins/{coin_id}/market_chart', params=params)
 """
 Unified API client service for external data sources with retry logic and error handling.
 
@@ -398,6 +419,21 @@ class UnifiedAPIClient:
                 return self.cache_service.flush_all() if self.cache_service else False
         return False
 
+
+class CoinMarketCapClient(APIClient):
+    """CoinMarketCap API client"""
+    def __init__(self, settings: Settings):
+        super().__init__('https://pro-api.coinmarketcap.com/v1/')
+        self.api_key = settings.coinmarketcap_api_key
+
+    async def get_listings(self, start: int = 1, limit: int = 100) -> Dict[str, Any]:
+        headers = {'X-CMC_PRO_API_KEY': self.api_key}
+        params = {'start': start, 'limit': limit}
+        return await self.get('cryptocurrency/listings/latest', params=params, headers=headers)
+
+    async def get_quotes(self, symbols: List[str]) -> Dict[str, Any]:
+        headers = {'X-CMC_PRO_API_KEY': self.api_key}
+
 # Specialized API clients
 class CoinMarketCapClient(UnifiedAPIClient):
     """CoinMarketCap API client with specialized methods"""
@@ -449,6 +485,30 @@ class CoinMarketCapClient(UnifiedAPIClient):
         """Get market pairs for a cryptocurrency"""
         params = {'symbol': symbol}
         return await self.get('cryptocurrency/market-pairs/latest', params=params)
+
+
+    async def get_historical_quotes(self, symbol: str, time_start: str, time_end: str, interval: str = "daily") -> Dict[str, Any]:
+        """
+        Get historical price quotes for a symbol from CoinMarketCap
+        Args:
+            symbol: Cryptocurrency symbol (e.g., 'BTC')
+            time_start: Start time in ISO 8601 (e.g., '2023-01-01T00:00:00Z')
+            time_end: End time in ISO 8601 (e.g., '2023-01-31T00:00:00Z')
+            interval: 'daily', 'hourly', etc.
+        Returns:
+            API response dict
+        """
+        headers = {'X-CMC_PRO_API_KEY': self.api_key}
+        params = {
+            'symbol': symbol,
+            'time_start': time_start,
+            'time_end': time_end,
+            'interval': interval
+        }
+        return await self.get('cryptocurrency/quotes/historical', params=params, headers=headers)
+
+class NewsAPIClient(APIClient):
+    """News API client"""
 
 class NewsAPIClient(UnifiedAPIClient):
     """News API client with specialized methods"""

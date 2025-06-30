@@ -1,2 +1,4 @@
 // Environment variables configuration
-module.exports = {};
+// Use validated config
+const config = require('./environment.validate');
+module.exports = config;

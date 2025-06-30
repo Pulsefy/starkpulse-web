@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from urllib.parse import urlparse
 
-from ..services.api_client import NewsAPIClient
+from ..services.api_client import NewsAPIClient, CryptoPanicApiClinet
 from ..services.database_service import DatabaseService
 from ..services.cache_service import CacheService, CacheKeys
 from ..models.news_models import NewsArticle, NewsSource, NewsFeed
@@ -42,20 +42,21 @@ class NewsProcessor:
     """
     Processor for news data collection and processing
     """
-    
+
     def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
-                 news_client: NewsAPIClient):
+                 news_client: NewsAPIClient, crypto_panic: CryptoPanicApiClinet):
         self.db_service = db_service
         self.cache_service = cache_service
         self.news_client = news_client
-        
+        self.crypto_panic = crypto_panic
+
         # Crypto-related keywords for filtering
         self.crypto_keywords = [
             'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto',
             'blockchain', 'defi', 'nft', 'altcoin', 'stablecoin', 'mining',
             'starknet', 'stark', 'layer2', 'l2', 'scaling', 'zk-stark'
         ]
-    
+
     async def update_news_sources(self) -> int:
         """
         Update and validate news sources
@@ -64,7 +65,7 @@ class NewsProcessor:
             Number of sources processed
         """
         logger.info("Updating news sources")
-        
+
         # Predefined reliable crypto news sources
         sources_data = [
             {
@@ -100,9 +101,9 @@ class NewsProcessor:
                 'is_verified': True
             }
         ]
-        
+
         processed_count = 0
-        
+
         for source_data in sources_data:
             try:
                 # Check if source already exists
@@ -110,32 +111,41 @@ class NewsProcessor:
                     existing_source = session.query(NewsSource)\
                                            .filter(NewsSource.domain == source_data['domain'])\
                                            .first()
-                
+
                 if not existing_source:
                     self.db_service.create_news_source(source_data)
                     logger.debug(f"Created news source: {source_data['name']}")
-                
+
                 processed_count += 1
-                
+
             except Exception as e:
                 logger.error(f"Error processing news source {source_data['name']}: {str(e)}")
                 continue
-        
+
         logger.info(f"Successfully processed {processed_count} news sources")
         return processed_count
-    
+
     async def fetch_crypto_news(self, hours_back: int = 24) -> int:
         logger.info(f"Fetching crypto news via NewsAPI")
-        
+
         from_date = (datetime.utcnow() - timedelta(hours=hours_back)).isoformat()
         try:
-            response = await self.news_client.get_everything("crypto OR bitcoin OR ethereum", from_date=from_date)
-            articles = response.get("articles", [])
-            logger.info(f"Fetched {len(articles)} articles")
+            newsapi_articles = await self.news_client.get_everything(
+                "crypto OR bitcoin OR ethereum", from_date=from_date
+            )
+            cryptopanic_articles = await self.crypto_panic.get_news(
+                query="crypto OR bitcoin OR ethereum", currency="usd"
+            )
+
+            merged_articles = self._merge_articles(newsapi_articles, cryptopanic_articles)
+            unique_articles = self._deduplicate_articles(merged_articles)
+
+            
+            logger.info(f"Fetched {len(merged_articles)} merged articles & {len(unique_articles)} unique articles")
 
             valid_articles = []
             with self.db_service.get_session() as session:
-                for article in articles:
+                for article in merged_articles:
                     self.quality_metrics.record_total()
 
                     url = article.get("url")
@@ -173,7 +183,7 @@ class NewsProcessor:
         except Exception as e:
             logger.error(f"Failed fetching news: {str(e)}")
             return 0
-    
+
     def _get_or_create_source(self, domain: str, source_info: Dict[str, Any]) -> Optional[NewsSource]:
         """
         Get existing news source or create new one
@@ -191,10 +201,10 @@ class NewsProcessor:
                 source = session.query(NewsSource)\
                               .filter(NewsSource.domain == domain)\
                               .first()
-                
+
                 if source:
                     return source
-                
+
                 # Create new source
                 source_data = {
                     'name': source_info.get('name', domain),
@@ -204,13 +214,13 @@ class NewsProcessor:
                     'is_verified': False,
                     'is_active': True
                 }
-                
+
                 return self.db_service.create_news_source(source_data)
-                
+
         except Exception as e:
             logger.error(f"Error getting/creating news source {domain}: {str(e)}")
             return None
-    
+
     def _calculate_relevance_score(self, title: str, description: str, content: str) -> float:
         """
         Calculate relevance score for crypto news
@@ -226,34 +236,34 @@ class NewsProcessor:
         try:
             # Combine all text
             full_text = f"{title} {description} {content}".lower()
-            
+
             # Count keyword matches
             keyword_matches = 0
             total_keywords = len(self.crypto_keywords)
-            
+
             for keyword in self.crypto_keywords:
                 if keyword.lower() in full_text:
                     keyword_matches += 1
-            
+
             # Base score from keyword density
             base_score = keyword_matches / total_keywords
-            
+
             # Boost score for title matches (more important)
             title_lower = title.lower()
             title_boost = 0
             for keyword in self.crypto_keywords[:5]:  # Top keywords
                 if keyword.lower() in title_lower:
                     title_boost += 0.1
-            
+
             # Final score (capped at 1.0)
             final_score = min(base_score + title_boost, 1.0)
-            
+
             return round(final_score, 3)
-            
+
         except Exception as e:
             logger.error(f"Error calculating relevance score: {str(e)}")
             return 0.5  # Default neutral score
-    
+
     async def analyze_sentiment(self, article_id: int) -> float:
         """
         Analyze sentiment of news article (placeholder for ML integration)
@@ -265,10 +275,10 @@ class NewsProcessor:
             Sentiment score (-1.0 to 1.0) or None if error
         """
         logger.info(f"Analyzing sentiment for article {article_id}")
-        
+
         # Dummy implementation
         return 0.75  # Positive sentiment
-    
+
     async def get_trending_news(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Get trending news articles based on relevance and recency
@@ -282,7 +292,7 @@ class NewsProcessor:
         try:
             with self.db_service.get_session() as session:
                 from sqlalchemy import and_, desc
-                
+
                 # Get recent high-relevance articles
                 trending_query = session.query(NewsArticle, NewsSource)\
                     .join(NewsSource)\
@@ -293,9 +303,9 @@ class NewsProcessor:
                     ))\
                     .order_by(desc(NewsArticle.relevance_score), desc(NewsArticle.published_at))\
                     .limit(limit)
-                
+
                 results = trending_query.all()
-                
+
                 trending_articles = []
                 for article, source in results:
                     trending_articles.append({
@@ -310,13 +320,13 @@ class NewsProcessor:
                         'relevance_score': float(article.relevance_score or 0),
                         'sentiment_score': float(article.sentiment_score or 0)
                     })
-                
+
                 return trending_articles
-                
+
         except Exception as e:
             logger.error(f"Error getting trending news: {str(e)}")
             return []
-    
+
     async def cleanup_old_articles(self, days_to_keep: int = 30):
         """
         Clean up old news articles beyond retention period
@@ -326,15 +336,57 @@ class NewsProcessor:
         """
         try:
             logger.info(f"Cleaning up news articles older than {days_to_keep} days")
-            
+
             cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)
-            
+
             with self.db_service.get_session() as session:
                 deleted_count = session.query(NewsArticle)\
                                      .filter(NewsArticle.published_at < cutoff_date)\
                                      .delete()
-                
+
                 logger.info(f"Cleaned up {deleted_count} old news articles")
-                
+
         except Exception as e:
             logger.error(f"Error cleaning up old news articles: {str(e)}")
+
+    async def _merge_articles(self, *sources: List[Dict]) -> List[Dict]:
+        """
+        Merge articles from multiple sources into a single list.
+
+        Args:
+            *sources: Multiple lists of articles.
+
+        Returns:
+            Combined list of articles.
+        """
+        merged = []
+        for source_list in sources:
+            if source_list:
+                merged.extend(source_list)
+        return merged
+
+    async def _deduplicate_articles(self, articles: List[Dict]) -> List[Dict]:
+        """
+        Deduplicate articles using their normalized URL or title hash.
+
+        Args:
+            articles: List of article dictionaries.
+
+        Returns:
+            Deduplicated list of articles.
+        """
+        seen = set()
+        unique_articles = []
+
+        for article in articles:
+            # Fallback to title + source if URL isn't available
+            key_raw = article.get("url") or (
+                article.get("title", "") + article.get("source", "")
+            )
+            key_hash = hashlib.sha256(key_raw.encode("utf-8")).hexdigest()
+
+            if key_hash not in seen:
+                seen.add(key_hash)
+                unique_articles.append(article)
+
+        return unique_articles

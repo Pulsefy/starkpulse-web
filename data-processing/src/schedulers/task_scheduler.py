@@ -5,6 +5,7 @@ Task scheduler for automated data processing
 import asyncio
 import schedule
 import time
+import traceback
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -44,9 +45,7 @@ class TaskScheduler:
         self.db_service = db_config
 
         self.scheduler = AsyncIOScheduler(
-            jobstores={
-                "default": SQLAlchemyJobStore(engine=self.db_service.engine())
-            },
+            jobstores={"default": SQLAlchemyJobStore(engine=self.db_service.engine())},
             executors={"default": AsyncIOExecutor()},
             job_defaults={"coalesce": False, "max_instances": 1},
             timezone="UTC",
@@ -74,13 +73,42 @@ class TaskScheduler:
             job_id="monitor_starknet",
         )
 
-    def _add_job(self, coro_func, *, minutes: int, job_id: str):
-        """Adds an async job to the scheduler with an interval trigger"""
+    def _add_job(
+        self,
+        coro_func,
+        *,
+        minutes: int,
+        job_id: str,
+        priority: int = 5,
+        max_retries: int = 3,
+        **kwargs,
+    ):
+        """
+        Adds an async job to the scheduler with an interval trigger
+        """
+
+        async def retryable_job():
+            retry_count = kwargs.get("retry_count", 0)
+            try:
+                await coro_func()
+            except Exception as e:
+                logger.warning(f"Job {job_id} failed on attempt {retry_count+1}: {e}")
+                if retry_count < max_retries:
+                    self.scheduler.add_job(
+                        self._run_async_job,
+                        args=[coro_func],
+                        trigger=IntervalTrigger(seconds=5),
+                        id=f"{job_id}_retry_{retry_count}",
+                        replace_existing=True,
+                        kwargs={"retry_count": retry_count + 1},
+                    )
+                else:
+                    logger.error(f"{job_id} failed after {max_retries} retries")
+
         self.scheduler.add_job(
-            func=self._run_async_job,
-            args=[coro_func],
+            func=retryable_job,
             trigger=IntervalTrigger(minutes=minutes),
-            id=job_id,
+            id=f"{job_id}_{priority}",
             replace_existing=True,
         )
 

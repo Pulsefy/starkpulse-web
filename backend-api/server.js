@@ -1,10 +1,14 @@
 const express = require("express");
+const marketRoutes = require("./routes/market");
+const newsRoutes = require("./routes/news");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/market", marketRoutes);
+app.use("/news", newsRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

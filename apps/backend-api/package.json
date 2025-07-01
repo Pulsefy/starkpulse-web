@@ -32,9 +32,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.1",
     "morgan": "^1.10.0",
-
-    "nodemailer": "^7.0.3"
-
     "nodemailer": "^7.0.3",
     "pino": "^9.7.0",
     "pino-pretty": "^13.0.0",
@@ -42,6 +39,7 @@
   },
   "devDependencies": {
     "artillery": "^2.0.23",
+    "colors": "^1.4.0",
     "jest": "^30.0.3",
     "jest-extended": "^6.0.0",
     "jest-mock-extended": "^4.0.0",

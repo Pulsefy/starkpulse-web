@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
+const logger = require('./src/utils/logger');
 const mongoose = require("mongoose");
 const gatewayRoutes = require('./src/routes/gatewayRoutes');
 

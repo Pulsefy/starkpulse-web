@@ -218,8 +218,28 @@ class UserController {
   // ==========================
   async deleteUser(req, res) {
     try {
+      const User = require('../models/User');
+      
+      // First validate if the current user exists and is admin
+      const currentUser = await User.findById(req.user._id);
+      if (!currentUser) {
+        return res.status(401).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
       // Check if user is admin
-      if (req.user.role !== 'admin') {
+      if (currentUser.role !== 'admin') {
+        // For security, do a redundant check to ensure user hasn't been deleted already
+        const targetUserExists = await User.findById(req.params.userId);
+        if (!targetUserExists) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found"
+          });
+        }
+        
         return res.status(403).json({
           success: false,
           message: "Forbidden: Admin access required to delete other users"
@@ -236,8 +256,7 @@ class UserController {
         });
       }
       
-      // Delete the user
-      const User = require('../models/User');
+      // Delete the user only if the current user is admin (already checked above)
       const result = await User.findByIdAndDelete(userId);
       
       if (!result) {

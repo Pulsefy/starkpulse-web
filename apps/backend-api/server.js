@@ -5,6 +5,10 @@ const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
+
+
+const logger = require('./src/utils/logger');
+
 const mongoose = require("mongoose");
 const gatewayRoutes = require('./src/routes/gatewayRoutes');
 
@@ -16,6 +20,7 @@ const compression = require("compression")
 const morgan = require("morgan")
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
 const config = require("./src/config/environment")
+
 
 
 
@@ -78,6 +83,7 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
   .catch((err) => console.error("MongoDB connection error:", err))
+
 
 
 // ==========================
@@ -149,6 +155,77 @@ app.use(
 );
 
 // ==========================
+
+// ==========================
+// Proxy Target Pools
+// ==========================
+const servicePools = {
+  AUTH: ["http://localhost:5001", "http://localhost:5002"],
+  USER: ["http://localhost:6001"],
+};
+
+const roundRobinCounter = {
+  AUTH: 0,
+  USER: 0,
+};
+
+function getNextTarget(serviceName) {
+  const pool = servicePools[serviceName];
+  if (!pool || pool.length === 0) {
+    console.warn(`No target defined for service: ${serviceName}`);
+    return null;
+  }
+
+  const index = roundRobinCounter[serviceName];
+  roundRobinCounter[serviceName] = (index + 1) % pool.length;
+  const target = pool[index];
+  if (DEBUG) console.log(`[${serviceName}] → ${target}`);
+  return target;
+}
+
+// ==========================
+// Proxy Routes
+// ==========================
+
+app.use(
+  "/api/auth",
+  authLimiter,
+  (req, res, next) => {
+    const target = getNextTarget("AUTH");
+    if (!target) return res.status(503).json({ message: "Auth service unavailable" });
+
+    createProxyMiddleware({
+      target,
+      changeOrigin: true,
+      pathRewrite: { "^/api/auth": "/" },
+      onError: (err, req, res) => {
+        console.error("Auth Proxy Error:", err);
+        res.status(502).json({ message: "Bad Gateway - Auth Service" });
+      },
+    })(req, res, next);
+  }
+);
+
+app.use(
+  "/api/user",
+  (req, res, next) => {
+    const target = getNextTarget("USER");
+    if (!target) return res.status(503).json({ message: "User service unavailable" });
+
+    createProxyMiddleware({
+      target,
+      changeOrigin: true,
+      pathRewrite: { "^/api/user": "/" },
+      onError: (err, req, res) => {
+        console.error("User Proxy Error:", err);
+        res.status(502).json({ message: "Bad Gateway - User Service" });
+      },
+    })(req, res, next);
+  }
+);
+
+// ==========================
+
 // Health Check
 // ==========================
 app.get("/api/health", (req, res) => {

@@ -46,6 +46,10 @@
     "nodemailer": "^7.0.3"
 
     "nodemailer": "^7.0.3",
+
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0"
+
     "ratelimiter": "^3.4.1"
 
   },

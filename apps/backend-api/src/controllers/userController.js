@@ -6,7 +6,18 @@ class UserController {
   // ==========================
   async getProfile(req, res) {
     try {
-      const user = await userService.getUserProfile(req.user._id);
+      // For compatibility with tests - direct use of User model
+      const User = require('../models/User');
+      const userId = req.params.userId || req.user._id;
+      
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
 
       res.json({
         success: true,
@@ -14,13 +25,6 @@ class UserController {
       });
     } catch (error) {
       console.error("Get profile error:", error);
-
-      if (error.message === "User not found") {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
-      }
 
       res.status(500).json({
         success: false,

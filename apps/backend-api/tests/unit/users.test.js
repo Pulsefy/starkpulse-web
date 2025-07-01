@@ -36,7 +36,7 @@ describe('User Controller Unit Tests', () => {
     };
   });
   
-  describe('getUserProfile', () => {
+  describe('getProfile', () => {
     it('should get the user profile successfully', async () => {
       // Arrange
       const mockUser = mockData.generateMockUser();
@@ -44,7 +44,7 @@ describe('User Controller Unit Tests', () => {
       require('../../src/models/User').findById.mockResolvedValueOnce(mockUser);
       
       // Act
-      await userController.getUserProfile(mockReq, mockRes);
+      await userController.getProfile(mockReq, mockRes);
       
       // Assert
       expect(require('../../src/models/User').findById).toHaveBeenCalledWith(mockUser._id.toString());
@@ -63,7 +63,7 @@ describe('User Controller Unit Tests', () => {
       require('../../src/models/User').findById.mockResolvedValueOnce(null);
       
       // Act
-      await userController.getUserProfile(mockReq, mockRes);
+      await userController.getProfile(mockReq, mockRes);
       
       // Assert
       expect(mockRes.status).toHaveBeenCalledWith(404);

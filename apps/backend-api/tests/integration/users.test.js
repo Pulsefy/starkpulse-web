@@ -8,7 +8,8 @@ let adminUser;
 let accessToken;
 let adminAccessToken;
 
-beforeAll(async () => {
+// This function will create fresh test users before each test suite
+async function setupTestUsers() {
   // Make sure we are connected to MongoDB before running tests
   if (mongoose.connection.readyState !== 1) {
     console.log('MongoDB not connected, waiting to reconnect...');
@@ -24,6 +25,11 @@ beforeAll(async () => {
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync('Password123!', salt);
   
+  // Clear any existing users with these emails to avoid conflicts
+  await User.deleteMany({
+    email: { $in: ['test@example.com', 'admin@example.com'] }
+  });
+  
   testUser = new User({
     username: 'testuser',
     email: 'test@example.com',
@@ -31,6 +37,7 @@ beforeAll(async () => {
     firstName: 'Test',  // Adding required field
     lastName: 'User',   // Adding required field
     verified: true,
+    active: true,
     role: 'user'
   });
   
@@ -41,26 +48,41 @@ beforeAll(async () => {
     firstName: 'Admin',  // Adding required field
     lastName: 'User',    // Adding required field
     verified: true,
+    active: true,
     role: 'admin'
-  });
-  
-  // Clear any existing users with these emails
-  await User.deleteMany({
-    email: { $in: ['test@example.com', 'admin@example.com'] }
   });
   
   await testUser.save();
   await adminUser.save();
   
+  // Verify users were saved successfully
+  const savedTestUser = await User.findById(testUser._id);
+  const savedAdminUser = await User.findById(adminUser._id);
+  
+  if (!savedTestUser || !savedAdminUser) {
+    throw new Error('Failed to save test users to database');
+  }
+  
   // Create authentication tokens manually to avoid login issues
   const jwt = require('jsonwebtoken');
   const JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
-  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret';
   
   accessToken = jwt.sign({ userId: testUser._id, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
   adminAccessToken = jwt.sign({ userId: adminUser._id, role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
   
   console.log('Successfully created test tokens for user integration tests');
+  
+  // Return the IDs to ensure they are accessible
+  return {
+    testUserId: testUser._id,
+    adminUserId: adminUser._id
+  };
+}
+
+beforeEach(async () => {
+  // Create fresh users before each test
+  const ids = await setupTestUsers();
+  console.log(`Test users created with IDs: ${ids.testUserId}, ${ids.adminUserId}`);
 });
 
 afterAll(async () => {
@@ -195,15 +217,25 @@ describe('User API Integration Tests', () => {
     });
     
     it('should reject regular user from deleting another user', async () => {
+      // Save the original admin user ID
+      const adminUserId = adminUser._id;
+
+      // Verify admin exists before deletion attempt
+      const adminBeforeDelete = await User.findById(adminUserId);
+      expect(adminBeforeDelete).not.toBeNull();
+
+      // Try to delete the admin as a regular user
       const response = await testRequest
-        .delete(`/api/users/${adminUser._id}`)
+        .delete(`/api/users/${adminUserId}`)
         .set('Authorization', `Bearer ${accessToken}`);
       
+      // Check status code is correct
       expect(response.status).toBe(403);
       
-      // Verify admin still exists
-      const adminStillExists = await User.findById(adminUser._id);
+      // Verify admin still exists after the deletion attempt
+      const adminStillExists = await User.findById(adminUserId);
       expect(adminStillExists).not.toBeNull();
+      expect(adminStillExists.email).toBe(adminUser.email);
     });
   });
 });

@@ -1,0 +1,100 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: Warm up
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 20
+      name: Ramp up load
+    - duration: 180
+      arrivalRate: 20
+      name: Sustained load
+  environments:
+    production:
+      target: "https://api.starkpulse.com"
+    staging:
+      target: "https://api-staging.starkpulse.com"
+  variables:
+    email: "$randomString@example.com"
+    password: "Test123!"
+    username: "$randomString"
+
+scenarios:
+  - name: "Auth flow performance test"
+    flow:
+      # Register a new user
+      - post:
+          url: "/api/auth/register"
+          json:
+            email: "{{ $randomString(10) }}@example.com"
+            password: "Performance123!"
+            username: "perf_{{ $randomString(8) }}"
+          capture:
+            - json: "$.tokens.accessToken"
+              as: "accessToken"
+            - json: "$.tokens.refreshToken"
+              as: "refreshToken"
+      
+      # Login with created user
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.tokens.accessToken"
+              as: "accessToken"
+            - json: "$.tokens.refreshToken"
+              as: "refreshToken"
+          
+      # Get user profile
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      
+      # Refresh token
+      - post:
+          url: "/api/auth/refresh-token"
+          json:
+            refreshToken: "{{ refreshToken }}"
+          capture:
+            - json: "$.tokens.accessToken"
+              as: "newAccessToken"
+      
+      # Logout
+      - post:
+          url: "/api/auth/logout"
+          headers:
+            Authorization: "Bearer {{ newAccessToken }}"
+          json:
+            refreshToken: "{{ refreshToken }}"
+
+  - name: "API endpoints performance"
+    weight: 3
+    flow:
+      # Login to get token
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "performance@example.com"
+            password: "Performance123!"
+          capture:
+            - json: "$.tokens.accessToken"
+              as: "accessToken"
+      
+      # Make multiple API calls to test performance
+      - get:
+          url: "/api/health"
+      
+      - get:
+          url: "/api/crypto/prices"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+      
+      - get:
+          url: "/api/news/latest"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"

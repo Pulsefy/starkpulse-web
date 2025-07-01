@@ -1,13 +1,14 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const config = require('./environment');
 
 class JWTService {
   // ==========================
   // Generate access token
   // ==========================
   generateAccessToken(payload) {
-    return jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "24h",
+    return jwt.sign(payload, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
       issuer: "user-management-api",
       audience: "user-management-client",
     });
@@ -17,8 +18,8 @@ class JWTService {
   // Generate refresh token
   // ==========================
   generateRefreshToken(payload) {
-    return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+    return jwt.sign(payload, config.jwt.refreshSecret, {
+      expiresIn: config.jwt.refreshExpiresIn,
       issuer: "user-management-api",
       audience: "user-management-client",
     });
@@ -29,7 +30,7 @@ class JWTService {
   // ==========================
   verifyAccessToken(token) {
     try {
-      return jwt.verify(token, process.env.JWT_SECRET, {
+      return jwt.verify(token, config.jwt.secret, {
         issuer: "user-management-api",
         audience: "user-management-client",
       });
@@ -43,7 +44,7 @@ class JWTService {
   // ==========================
   verifyRefreshToken(token) {
     try {
-      return jwt.verify(token, process.env.JWT_REFRESH_SECRET, {
+      return jwt.verify(token, config.jwt.refreshSecret, {
         issuer: "user-management-api",
         audience: "user-management-client",
       });
@@ -62,7 +63,7 @@ class JWTService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: process.env.JWT_EXPIRES_IN || "24h",
+      expiresIn: config.jwt.expiresIn,
     };
   }
 

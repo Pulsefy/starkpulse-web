@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -8,8 +9,26 @@ const logger = require('./src/utils/logger');
 const mongoose = require("mongoose");
 const gatewayRoutes = require('./src/routes/gatewayRoutes');
 
+const express = require("express")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const helmet = require("helmet")
+const compression = require("compression")
+const morgan = require("morgan")
+const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
+const config = require("./src/config/environment")
+
+
+
 
 const { createProxyMiddleware } = require("http-proxy-middleware");
+
+// ==========================
+// App Initialization
+// ==========================
+const app = express()
+const PORT = config.port || 3000
+
 
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
 const { errorHandler } = require("./src/middleware/errorHandler");
@@ -19,10 +38,14 @@ dotenv.config();
 // ==========================
 // App Initialization
 // ==========================
+
 const app = express();
 app.use('/api', gatewayRoutes);
 const PORT = process.env.PORT || 3000;
 const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
+
+app.use(limiter)
+
 
 // ==========================
 // Middleware
@@ -33,7 +56,7 @@ app.use(limiter);
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: config.cors.frontendUrl || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -48,12 +71,16 @@ app.use(morgan("combined"));
 // MongoDB Connection
 // ==========================
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(config.mongodbUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("Connected to MongoDB"))
+
   .catch((err) => console.error("MongoDB connection error:", err));
+
+  .catch((err) => console.error("MongoDB connection error:", err))
+
 
 // ==========================
 // Proxy Target Pools
@@ -165,9 +192,17 @@ process.on("SIGINT", shutdown);
 // Start Server
 // ==========================
 app.listen(PORT, () => {
+
   console.log(`🚀 API Gateway running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
   if (DEBUG) console.log("🔍 Proxy debug mode is ON");
 });
 
 module.exports = app;
+
+  console.log(`Server running on port ${PORT}`)
+  console.log(`Environment: ${config.nodeEnv || "development"}`)
+})
+
+module.exports = app
+

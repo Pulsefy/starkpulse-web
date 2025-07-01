@@ -36,6 +36,15 @@ describe('Auth API Integration Tests', () => {
     });
 
     await testUser.save();
+    
+    // Create test tokens for auth endpoints
+    const JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret';
+    
+    accessToken = jwt.sign({ userId: testUser._id, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
+    refreshToken = jwt.sign({ userId: testUser._id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    
+    console.log('Successfully created test tokens for auth integration tests');
   });
 
   afterAll(async () => {

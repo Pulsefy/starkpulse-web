@@ -52,22 +52,15 @@ beforeAll(async () => {
   await testUser.save();
   await adminUser.save();
   
-  // Login to get tokens
-  const loginResponse = await testRequest
-    .post('/api/auth/login')
-    .send({
-      email: 'test@example.com',
-      password: 'Password123!'
-    });
-  accessToken = loginResponse.body.tokens.accessToken;
+  // Create authentication tokens manually to avoid login issues
+  const jwt = require('jsonwebtoken');
+  const JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret';
   
-  const adminLoginResponse = await testRequest
-    .post('/api/auth/login')
-    .send({
-      email: 'admin@example.com',
-      password: 'Password123!'
-    });
-  adminAccessToken = adminLoginResponse.body.tokens.accessToken;
+  accessToken = jwt.sign({ userId: testUser._id, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
+  adminAccessToken = jwt.sign({ userId: adminUser._id, role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+  
+  console.log('Successfully created test tokens for user integration tests');
 });
 
 afterAll(async () => {

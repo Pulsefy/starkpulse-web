@@ -12,48 +12,50 @@ const requireAuth = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: "Access token required",
+        code: "TOKEN_MISSING",
       });
     }
 
     const token = jwtService.jwt.extractTokenFromHeader(authHeader);
     const decoded = jwtService.jwt.verifyAccessToken(token);
 
-    // ==========================
-    // Find user and check if still active
-    // ==========================
     const user = await User.findById(decoded.userId);
     if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,
         message: "User not found or inactive",
+        code: "USER_INACTIVE",
       });
     }
-    if (!req.user.emailVerified) {
+
+    // ✅ Assign user to request for downstream usage
+    req.user = user;
+    req.token = token;
+
+    if (!user.emailVerified) {
       return res.status(403).json({
         success: false,
         message: "Please verify your email address to access this resource",
+        code: "EMAIL_NOT_VERIFIED",
       });
     }
-    // ==========================
-    // Check if token was issued before password change
-    // ==========================
+
     if (
       user.passwordChangedAt &&
-      decoded.iat < user.passwordChangedAt.getTime() / 1000
+      decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
     ) {
       return res.status(401).json({
         success: false,
         message: "Token invalid due to password change",
+        code: "TOKEN_INVALIDATED",
       });
     }
 
-    req.user = user;
-    req.token = token;
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
 
-    if (error.message.includes("expired")) {
+    if (error.message?.toLowerCase().includes("expired")) {
       return res.status(401).json({
         success: false,
         message: "Access token expired",
@@ -61,15 +63,16 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: "Invalid access token",
+      code: "TOKEN_INVALID",
     });
   }
 };
 
 // ==========================
-// Middleware to check if user is already authenticated
+// Middleware to check if user is a guest (unauthenticated)
 // ==========================
 const requireGuest = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -82,8 +85,11 @@ const requireGuest = (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Already authenticated",
+        code: "ALREADY_AUTHENTICATED",
       });
-    } catch (error) {}
+    } catch (_) {
+      // ignore invalid token, continue as guest
+    }
   }
 
   next();
@@ -93,12 +99,18 @@ const requireGuest = (req, res, next) => {
 // Middleware to check if user owns the resource
 // ==========================
 const requireOwnership = (req, res, next) => {
-  if (req.params.userId && req.params.userId !== req.user._id.toString()) {
+  if (
+    req.params.userId &&
+    req.user &&
+    req.params.userId !== req.user._id.toString()
+  ) {
     return res.status(403).json({
       success: false,
       message: "Access denied",
+      code: "FORBIDDEN",
     });
   }
+
   next();
 };
 

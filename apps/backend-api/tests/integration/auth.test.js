@@ -8,11 +8,29 @@ describe('Auth API Integration Tests', () => {
   let refreshToken;
 
   beforeAll(async () => {
+    // Make sure we are connected to MongoDB before running tests
+    if (mongoose.connection.readyState !== 1) {
+      console.log('MongoDB not connected, waiting to reconnect...');
+      await mongoose.disconnect();
+      await mongoose.connect(process.env.MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      });
+      console.log('Connected to MongoDB for auth integration tests');
+    }
+    
+    // Clear any existing test user
+    await User.deleteMany({
+      email: 'integration@example.com'
+    });
+    
     // Create a test user for auth tests
     testUser = new User({
       username: 'integrationtester',
       email: 'integration@example.com',
       password: await User.hashPassword('Integration123!'),
+      firstName: 'Integration', // Adding required field
+      lastName: 'Tester',      // Adding required field
       verified: true,
       loginAttempts: 0
     });
@@ -21,7 +39,12 @@ describe('Auth API Integration Tests', () => {
   });
 
   afterAll(async () => {
-    await User.deleteMany({});
+    // Clean up test data
+    if (mongoose.connection.readyState === 1) {
+      await User.deleteMany({
+        email: 'integration@example.com'
+      });
+    }
   });
 
   describe('POST /api/auth/register', () => {

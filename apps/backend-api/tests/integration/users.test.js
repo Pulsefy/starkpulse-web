@@ -1,16 +1,25 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 const mockData = require('../fixtures/mockData');
 const User = require('../../src/models/User');
 const bcrypt = require('bcryptjs');
 
-let mongoServer;
 let testUser;
 let adminUser;
 let accessToken;
 let adminAccessToken;
 
 beforeAll(async () => {
+  // Make sure we are connected to MongoDB before running tests
+  if (mongoose.connection.readyState !== 1) {
+    console.log('MongoDB not connected, waiting to reconnect...');
+    await mongoose.disconnect();
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log('Connected to MongoDB for user integration tests');
+  }
+  
   // Create test users before running tests
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync('Password123!', salt);
@@ -19,6 +28,8 @@ beforeAll(async () => {
     username: 'testuser',
     email: 'test@example.com',
     password: hashedPassword,
+    firstName: 'Test',  // Adding required field
+    lastName: 'User',   // Adding required field
     verified: true,
     role: 'user'
   });
@@ -27,8 +38,15 @@ beforeAll(async () => {
     username: 'adminuser',
     email: 'admin@example.com',
     password: hashedPassword,
+    firstName: 'Admin',  // Adding required field
+    lastName: 'User',    // Adding required field
     verified: true,
     role: 'admin'
+  });
+  
+  // Clear any existing users with these emails
+  await User.deleteMany({
+    email: { $in: ['test@example.com', 'admin@example.com'] }
   });
   
   await testUser.save();
@@ -54,7 +72,11 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Clean up test data
-  await User.deleteMany({});
+  if (mongoose.connection.readyState === 1) {
+    await User.deleteMany({
+      email: { $in: ['test@example.com', 'admin@example.com'] }
+    });
+  }
 });
 
 describe('User API Integration Tests', () => {

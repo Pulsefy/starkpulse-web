@@ -5,7 +5,7 @@ const helmet = require("helmet")
 const compression = require("compression")
 const morgan = require("morgan")
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
-require("dotenv").config()
+const config = require("./src/config/environment")
 
 const { errorHandler } = require("./src/middleware/errorHandler")
 const authRoutes = require("./src/routes/auth")
@@ -15,7 +15,7 @@ const userRoutes = require("./src/routes/users")
 // App Initialization
 // ==========================
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = config.port || 3000
 
 // ==========================
 // Global Middleware
@@ -28,13 +28,12 @@ app.use(compression())
 // ==========================
 app.use(limiter)
 
-
 // ==========================
 // CORS Configuration
 // ==========================
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: config.cors.frontendUrl || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -56,13 +55,12 @@ app.use(morgan("combined"))
 // MongoDB Connection
 // ==========================
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(config.mongodbUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err))
-
 
 // ==========================
 // API Routes
@@ -108,7 +106,7 @@ process.on("SIGTERM", () => {
 // ==========================
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`)
+  console.log(`Environment: ${config.nodeEnv || "development"}`)
 })
 
 module.exports = app

@@ -20,10 +20,18 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwtService.jwt.verifyAccessToken(token);
 
     const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) {
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: "User not found or inactive",
+        message: "User not found",
+        code: "USER_NOT_FOUND",
+      });
+    }
+    
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "User account is inactive",
         code: "USER_INACTIVE",
       });
     }
@@ -44,7 +52,7 @@ const requireAuth = async (req, res, next) => {
       user.passwordChangedAt &&
       decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
     ) {
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: "Token invalid due to password change",
         code: "TOKEN_INVALIDATED",
@@ -56,14 +64,14 @@ const requireAuth = async (req, res, next) => {
     console.error("Auth middleware error:", error);
 
     if (error.message?.toLowerCase().includes("expired")) {
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: "Access token expired",
         code: "TOKEN_EXPIRED",
       });
     }
 
-    return res.status(401).json({
+    return res.status(403).json({
       success: false,
       message: "Invalid access token",
       code: "TOKEN_INVALID",

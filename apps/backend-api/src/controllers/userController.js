@@ -214,6 +214,54 @@ class UserController {
   }
 
   // ==========================
+  // Delete a user (admin only)
+  // ==========================
+  async deleteUser(req, res) {
+    try {
+      // Check if user is admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: Admin access required to delete other users"
+        });
+      }
+      
+      const userId = req.params.userId;
+      
+      // Prevent admin from deleting themselves
+      if (userId === req.user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot delete your own account through this endpoint"
+        });
+      }
+      
+      // Delete the user
+      const User = require('../models/User');
+      const result = await User.findByIdAndDelete(userId);
+      
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: "User deleted successfully"
+      });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete user"
+      });
+    }
+  }
+  
+  // ==========================
   // Get all users (admin only)
   // ==========================
   async getUsers(req, res) {

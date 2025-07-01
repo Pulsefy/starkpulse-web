@@ -23,4 +23,9 @@ router.get("/export", requireAuth, userController.exportData)
 
 router.put("/deactivate", requireAuth, userController.deactivateAccount)
 
+// ==========================
+// Admin Routes
+// ==========================
+router.delete("/:userId", requireAuth, userController.deleteUser)
+
 module.exports = router

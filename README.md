@@ -31,6 +31,7 @@ starkpulse-web/
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **Next.js 14**: App router, server components, and streaming
 - **React 18**: Component-based UI development
 - **TypeScript**: Type-safe code
@@ -41,6 +42,7 @@ starkpulse-web/
 - **Recharts**: Responsive charting library
 
 ### Backend API
+
 - **Node.js**: Runtime environment
 - **Express.js 4.18.2**: Web framework
 - **RESTful Architecture**: Clean API design
@@ -48,6 +50,7 @@ starkpulse-web/
 - **Nodemon 3.0.1**: Development hot reload
 
 ### Data Processing
+
 - **Python 3.9+**: Core processing language
 - **Crypto Data Processing**: Market data aggregation
 - **News Processing**: Content aggregation and analysis
@@ -67,28 +70,34 @@ starkpulse-web/
 ### Quick Start
 
 1. **Clone the repository**:
+
 ```bash
 git clone https://github.com/Pulsefy/Starkpulse-web.git
 cd starkpulse-web
 ```
 
 2. **Setup Frontend**:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Access at: http://localhost:3000
+
+Access at: <http://localhost:3000>
 
 3. **Setup Backend API**:
+
 ```bash
 cd backend-api
 npm install
 npm start
 ```
-API available at: http://localhost:8000
+
+API available at: <http://localhost:8000>
 
 4. **Setup Data Processing** (Optional):
+
 ```bash
 cd data-processing
 pip install -r requirements.txt
@@ -98,9 +107,11 @@ python main.py
 ## 📁 Module Details
 
 ### Frontend (`/frontend`)
+
 The Next.js frontend application providing the user interface.
 
 **Key Directories:**
+
 - `app/` - Next.js app router pages
 - `components/` - Reusable UI components
 - `hooks/` - Custom React hooks
@@ -109,6 +120,7 @@ The Next.js frontend application providing the user interface.
 - `providers/` - Context providers
 
 **Scripts:**
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
@@ -116,22 +128,27 @@ The Next.js frontend application providing the user interface.
 - `npm run test` - Run tests
 
 ### Backend API (`/backend-api`)
+
 Express.js backend providing RESTful API services.
 
 **Features:**
+
 - Health monitoring endpoints
 - Comprehensive error handling
 - JSON request parsing
 - Development hot reload
 
 **Scripts:**
+
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
 
 ### Data Processing (`/data-processing`)
+
 Python module for cryptocurrency data processing and analysis.
 
 **Processors:**
+
 - `CryptoDataProcessor` - Market data aggregation
 - `NewsProcessor` - News content processing
 - `PortfolioProcessor` - Portfolio analytics
@@ -226,4 +243,3 @@ This project uses environment variables for configuration. Copy `.env.example` t
 - `PORT`: Port the app runs on (default: 3000)
 
 **Never commit real secrets to version control. Use `.env.example` as a template only.**
-        

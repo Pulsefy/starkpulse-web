@@ -52,7 +52,6 @@ Run unit tests with:
 npm test -- --testMatch="<rootDir>/tests/unit/**/*.test.js"
 ```
 
-
 ## Integration Tests
 
 Integration tests verify that different parts of the application work together correctly. They test API endpoints with a real MongoDB instance (in-memory) and mocked external services.
@@ -69,7 +68,6 @@ Run integration tests with:
 ```bash
 npm test -- --testMatch="<rootDir>/tests/integration/**/*.test.js"
 ```
-
 
 ## Performance Tests
 
@@ -88,13 +86,11 @@ Run performance tests with:
 npx artillery run tests/performance/auth-performance.yml
 ```
 
-
 Configure different environments using:
 
 ```bash
 npx artillery run tests/performance/auth-performance.yml -e production|staging
 ```
-
 
 ## Mock Data Utilities
 
@@ -117,7 +113,6 @@ Generate a coverage report with:
 ```bash
 npm run test:coverage
 ```
-
 
 View the HTML report in `coverage/lcov-report/index.html`
 
@@ -143,13 +138,11 @@ The CI/CD pipeline includes:
 npm test
 ```
 
-
 **Unit tests only:**
 
 ```bash
 npm test -- --testMatch="<rootDir>/tests/unit/**/*.test.js"
 ```
-
 
 **Integration tests only:**
 
@@ -157,17 +150,14 @@ npm test -- --testMatch="<rootDir>/tests/unit/**/*.test.js"
 npm test -- --testMatch="<rootDir>/tests/integration/**/*.test.js"
 ```
 
-
 **With coverage report:**
 
 ```bash
 npm run test:coverage
 ```
 
-
 **Performance tests:**
 
 ```bash
 npx artillery run tests/performance/auth-performance.yml
 ```
-

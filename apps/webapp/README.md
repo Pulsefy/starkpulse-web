@@ -31,28 +31,31 @@ The StarkPulse frontend delivers a seamless user experience with a futuristic UI
 ### Prerequisites
 
 - Node.js 18.0.0 or higher
-- npm 
+- npm
 - Git
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Pulsefy/Starkpulse.git
 cd starkpulse
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
 
-4. Access the application at http://localhost:3000
+4. Access the application at <http://localhost:3000>
 
 ## Project Structure
 
@@ -95,8 +98,6 @@ We welcome contributions to StarkPulse! Please follow these steps:
 
 - Divineifed1 👨‍💻
 - Cedarich 👨‍💻
-
-
 
 <p align="center">
   Built with ❤️ by the StarkPulse Team

@@ -54,6 +54,7 @@ The StarkPulse Backend API serves as the core server infrastructure for the Star
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/your-username/starkpulse.git
    cd starkpulse/backend-api
@@ -162,6 +163,7 @@ backend-api/
 ```
 
 ### Naming Conventions
+
 - **Files:** camelCase (e.g., `userController.js`)
 - **Folders:** lowercase, hyphen-separated for multi-word (e.g., `api-docs`)
 - **Classes:** PascalCase (e.g., `UserService`)
@@ -169,6 +171,7 @@ backend-api/
 - **Constants:** UPPER_SNAKE_CASE (e.g., `API_BASE_URL`)
 
 ### Guidelines
+
 - Each directory contains an `index.js` for clean imports.
 - Keep business logic in `services/`, not controllers.
 - Middleware is reusable and stateless.

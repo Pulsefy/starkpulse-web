@@ -148,6 +148,4 @@ const validate = (schema) => {
   };
 };
 
-
-module.exports = { validate, validateQuery };
-
+module.exports = { validate };

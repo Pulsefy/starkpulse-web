@@ -1,0 +1,91 @@
+name: Backend API Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/backend-api/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/backend-api/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # MongoDB service container
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'apps/backend-api/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./apps/backend-api
+        run: npm ci
+      
+      - name: Run unit tests
+        working-directory: ./apps/backend-api
+        run: npm test -- --testMatch="<rootDir>/tests/unit/**/*.test.js"
+      
+      - name: Run integration tests
+        working-directory: ./apps/backend-api
+        run: npm test -- --testMatch="<rootDir>/tests/integration/**/*.test.js"
+      
+      - name: Generate coverage report
+        working-directory: ./apps/backend-api
+        run: npm run test:coverage
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./apps/backend-api/coverage/
+          flags: backend
+          name: backend-api-codecov
+          fail_ci_if_error: true
+  
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'apps/backend-api/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./apps/backend-api
+        run: npm ci
+      
+      - name: Start API server in background
+        working-directory: ./apps/backend-api
+        run: |
+          npm start &
+          sleep 10 # Give server time to start
+      
+      - name: Run performance tests
+        working-directory: ./apps/backend-api
+        run: npx artillery run tests/performance/auth-performance.yml -e staging
+      
+      - name: Upload performance test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-report
+          path: ./apps/backend-api/artillery_report.json

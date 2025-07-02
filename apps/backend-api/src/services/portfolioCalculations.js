@@ -1,4 +1,4 @@
-const { getCryptoPrice } = require('./cryptoPrice.js');
+const cryptoPriceService = require('./cryptoPrice.js');
 
 async function calculatePortfolioMetrics(portfolio) {
   if (!portfolio || !portfolio.assets || portfolio.assets.length === 0) {
@@ -15,11 +15,12 @@ async function calculatePortfolioMetrics(portfolio) {
 
   // Calculate metrics for each asset
   for (const asset of portfolio.assets) {
-    const currentPrice = currentPrices[asset.symbol] || 0;
+    const currentPrice = currentPrices[asset.symbol]?.price || 0;
+    const priceChange24h = currentPrices[asset.symbol]?.change24h || 0;
     const invested = asset.quantity * asset.buyPrice;
     const value = asset.quantity * currentPrice;
     const profitLoss = value - invested;
-    const profitLossPercent = (profitLoss / invested) * 100;
+    const profitLossPercent = invested > 0 ? (profitLoss / invested) * 100 : 0;
 
     totalInvested += invested;
     currentValue += value;
@@ -30,23 +31,26 @@ async function calculatePortfolioMetrics(portfolio) {
       quantity: asset.quantity,
       buyPrice: asset.buyPrice,
       currentPrice,
+      priceChange24h,
       invested,
       value,
       profitLoss,
       profitLossPercent,
-      weight: 0 // Will be calculated later
+      weight: 0 
     });
   }
 
   // Calculate weights and diversification
-  assetMetrics.forEach(asset => {
-    asset.weight = (asset.value / currentValue) * 100;
-  });
+  if (currentValue > 0) {
+    assetMetrics.forEach(asset => {
+      asset.weight = (asset.value / currentValue) * 100;
+    });
+  }
 
   const totalProfitLoss = currentValue - totalInvested;
-  const totalProfitLossPercent = (totalProfitLoss / totalInvested) * 100;
+  const totalProfitLossPercent = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
 
-  // Calculate portfolio risk (simplified)
+  // Calculate portfolio risk
   const riskScore = calculateRiskScore(assetMetrics);
 
   return {
@@ -66,18 +70,18 @@ async function calculatePortfolioMetrics(portfolio) {
 async function getCurrentPrices(symbols) {
   const prices = {};
   const pricePromises = symbols.map(async symbol => {
-    prices[symbol] = await getCryptoPrice(symbol);
+    prices[symbol] = await cryptoPriceService.getPriceWithChange(symbol);
   });
   await Promise.all(pricePromises);
   return prices;
 }
 
 function calculateRiskScore(assets) {
-  // Simplified risk calculation
-  // In a real app, this would consider volatility, correlation, etc.
+  if (assets.length === 0) return 0;
+  
+  // Calculate weighted volatility based on 24h changes
   const weightedVolatility = assets.reduce((sum, asset) => {
-    // Assuming higher price variation means higher risk
-    const volatility = Math.abs(asset.profitLossPercent) / 100;
+    const volatility = Math.abs(asset.priceChange24h) / 100;
     return sum + (volatility * asset.weight);
   }, 0);
   
@@ -100,7 +104,8 @@ function analyzeDiversification(assets) {
       .slice(0, 3)
       .map(asset => ({
         symbol: asset.symbol,
-        weight: asset.weight.toFixed(2)
+        weight: asset.weight.toFixed(2),
+        currentPrice: asset.currentPrice
       }))
   };
 }

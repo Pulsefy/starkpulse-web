@@ -1,9 +1,15 @@
-
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const authRoutes = require("./src/routes/auth");
+const userRoutes = require("./src/routes/users");
+const http = require("http");
+const alertRoutes = require("./routes/alerts");
+const MonitoringService = require("./services/MonitoringService");
+const { setupWebSocket } = require("./utils/websocket");
+const alertLimiter = require("./middleware/alertLimiter");
 const dotenv = require("dotenv");
 const logger = require('./src/utils/logger');
 const mongoose = require("mongoose");
@@ -12,6 +18,7 @@ const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
 const config = require("./src/config/environment");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const { errorHandler } = require("./src/middleware/errorHandler");
+
 
 // ==========================
 // App Initialization
@@ -25,7 +32,6 @@ const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
 app.use('/api', gatewayRoutes);
 
 app.use(limiter)
-
 
 // ==========================
 // Middleware
@@ -43,8 +49,10 @@ app.use(
   })
 );
 
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(morgan("combined"));
 
 // ==========================
@@ -153,6 +161,7 @@ app.use("*", (req, res) => {
 // ==========================
 // Graceful Shutdown
 // ==========================
+
 const shutdown = () => {
   console.log("Shutdown signal received. Cleaning up...");
   mongoose.connection.close(() => {
@@ -177,4 +186,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-

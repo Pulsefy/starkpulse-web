@@ -1,2 +1,0 @@
-// JWT configuration
-module.exports = {};

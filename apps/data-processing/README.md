@@ -62,7 +62,9 @@ data-processing/
 4. **Setup environment variables**
    \`\`\`bash
    cp .env.example .env
+
    # Edit .env with your configuration
+
    \`\`\`
 
 5. **Initialize database**

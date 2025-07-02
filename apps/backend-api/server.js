@@ -1,9 +1,15 @@
-
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const authRoutes = require("./src/routes/auth");
+const userRoutes = require("./src/routes/users");
+const http = require("http");
+const alertRoutes = require("./routes/alerts");
+const MonitoringService = require("./services/MonitoringService");
+const { setupWebSocket } = require("./utils/websocket");
+const alertLimiter = require("./middleware/alertLimiter");
 const dotenv = require("dotenv");
 
 
@@ -11,44 +17,24 @@ const logger = require('./src/utils/logger');
 
 const mongoose = require("mongoose");
 const gatewayRoutes = require('./src/routes/gatewayRoutes');
-
-const express = require("express")
-const mongoose = require("mongoose")
-const cors = require("cors")
-const helmet = require("helmet")
-const compression = require("compression")
-const morgan = require("morgan")
-const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
-const config = require("./src/config/environment")
-
-
-
-
-const { createProxyMiddleware } = require("http-proxy-middleware");
-
-// ==========================
-// App Initialization
-// ==========================
-const app = express()
-const PORT = config.port || 3000
-
-
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
+const config = require("./src/config/environment");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 const { errorHandler } = require("./src/middleware/errorHandler");
 
-dotenv.config();
 
 // ==========================
 // App Initialization
 // ==========================
+dotenv.config();
 
 const app = express();
-app.use('/api', gatewayRoutes);
-const PORT = process.env.PORT || 3000;
+const PORT = config.port || process.env.PORT || 3000;
 const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
 
-app.use(limiter)
+app.use('/api', gatewayRoutes);
 
+app.use(limiter)
 
 // ==========================
 // Middleware
@@ -66,8 +52,10 @@ app.use(
   })
 );
 
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(morgan("combined"));
 
 // ==========================
@@ -79,10 +67,10 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log("Connected to MongoDB"))
-
   .catch((err) => console.error("MongoDB connection error:", err));
 
   .catch((err) => console.error("MongoDB connection error:", err))
+
 
 
 
@@ -252,6 +240,7 @@ app.use("*", (req, res) => {
 // ==========================
 // Graceful Shutdown
 // ==========================
+
 const shutdown = () => {
   console.log("Shutdown signal received. Cleaning up...");
   mongoose.connection.close(() => {
@@ -266,18 +255,13 @@ process.on("SIGINT", shutdown);
 // ==========================
 // Start Server
 // ==========================
-app.listen(PORT, () => {
-
-  console.log(`🚀 API Gateway running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
-  if (DEBUG) console.log("🔍 Proxy debug mode is ON");
-});
+// Only start the server if this file is executed directly (not imported)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 API Gateway running on port ${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
+    if (DEBUG) console.log("🔍 Proxy debug mode is ON");
+  });
+}
 
 module.exports = app;
-
-  console.log(`Server running on port ${PORT}`)
-  console.log(`Environment: ${config.nodeEnv || "development"}`)
-})
-
-module.exports = app
-

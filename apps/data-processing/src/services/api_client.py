@@ -1,24 +1,26 @@
-class CoinGeckoClient(APIClient):
-    """CoinGecko API client"""
-    def __init__(self):
-        super().__init__('https://api.coingecko.com/api/v3/')
-        self.rate_limiter = RateLimiter(max_requests=50, time_window=60)  # CoinGecko free tier
 
-    async def get_price(self, ids: List[str], vs_currencies: List[str] = ["usd"]) -> Dict[str, Any]:
-        await self.rate_limiter.acquire()
-        params = {
-            'ids': ','.join(ids),
-            'vs_currencies': ','.join(vs_currencies)
-        }
-        return await self.get('simple/price', params=params)
+# class CoinGeckoClient(APIClient):
+#     """CoinGecko API client"""
+#     def __init__(self):
+#         super().__init__('https://api.coingecko.com/api/v3/')
+#         self.rate_limiter = RateLimiter(max_requests=50, time_window=60)  # CoinGecko free tier
 
-    async def get_market_chart(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> Dict[str, Any]:
-        await self.rate_limiter.acquire()
-        params = {
-            'vs_currency': vs_currency,
-            'days': days
-        }
-        return await self.get(f'coins/{coin_id}/market_chart', params=params)
+#     async def get_price(self, ids: List[str], vs_currencies: List[str] = ["usd"]) -> Dict[str, Any]:
+#         await self.rate_limiter.acquire()
+#         params = {
+#             'ids': ','.join(ids),
+#             'vs_currencies': ','.join(vs_currencies)
+#         }
+#         return await self.get('simple/price', params=params)
+
+#     async def get_market_chart(self, coin_id: str, vs_currency: str = "usd", days: int = 30) -> Dict[str, Any]:
+#         await self.rate_limiter.acquire()
+#         params = {
+#             'vs_currency': vs_currency,
+#             'days': days
+#         }
+#         return await self.get(f'coins/{coin_id}/market_chart', params=params)
+
 """
 Unified API client service for external data sources with retry logic and error handling.
 
@@ -420,19 +422,19 @@ class UnifiedAPIClient:
         return False
 
 
-class CoinMarketCapClient(APIClient):
-    """CoinMarketCap API client"""
-    def __init__(self, settings: Settings):
-        super().__init__('https://pro-api.coinmarketcap.com/v1/')
-        self.api_key = settings.coinmarketcap_api_key
+# class CoinMarketCapClient(APIClient):
+#     """CoinMarketCap API client"""
+#     def __init__(self, settings: Settings):
+#         super().__init__('https://pro-api.coinmarketcap.com/v1/')
+#         self.api_key = settings.coinmarketcap_api_key
 
-    async def get_listings(self, start: int = 1, limit: int = 100) -> Dict[str, Any]:
-        headers = {'X-CMC_PRO_API_KEY': self.api_key}
-        params = {'start': start, 'limit': limit}
-        return await self.get('cryptocurrency/listings/latest', params=params, headers=headers)
+#     async def get_listings(self, start: int = 1, limit: int = 100) -> Dict[str, Any]:
+#         headers = {'X-CMC_PRO_API_KEY': self.api_key}
+#         params = {'start': start, 'limit': limit}
+#         return await self.get('cryptocurrency/listings/latest', params=params, headers=headers)
 
-    async def get_quotes(self, symbols: List[str]) -> Dict[str, Any]:
-        headers = {'X-CMC_PRO_API_KEY': self.api_key}
+#     async def get_quotes(self, symbols: List[str]) -> Dict[str, Any]:
+#         headers = {'X-CMC_PRO_API_KEY': self.api_key}
 
 # Specialized API clients
 class CoinMarketCapClient(UnifiedAPIClient):

@@ -1,2 +1,0 @@
-// Logging utilities
-module.exports = {};

@@ -1,13 +1,31 @@
-// Main router setup
+/**
+ * API Routes Index
+ * Provides API versioning support with backward compatibility
+ */
 const express = require('express');
 const router = express.Router();
+const { versionHandler, getVersions, getLatestVersion } = require('../middleware/versionHandler');
 
-router.use('/auth', require('./auth'));
-router.use('/users', require('./users'));
-router.use('/news', require('./news'));
-router.use('/crypto', require('./crypto'));
-router.use('/portfolio', require('./portfolio'));
-router.use('/starknet', require('./starknet'));
-router.use('/health', require('./health'));
+// API version information endpoint
+router.get('/versions', (req, res) => {
+  res.json({
+    versions: getVersions(),
+    current: getLatestVersion(),
+    documentation: '/api/docs'
+  });
+});
+
+// Documentation routes (no version handling for docs)
+router.use('/docs', require('./docs'));
+
+// API versioning middleware
+router.use(versionHandler);
+
+// Version-specific routes
+router.use('/v1', require('./v1'));
+router.use('/v2', require('./v2'));
+
+// Default to latest version for unversioned routes
+router.use('/', require(`./${getLatestVersion()}`));
 
 module.exports = router;

@@ -4,9 +4,6 @@ const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
-const authRoutes = require("./src/routes/auth");
-const userRoutes = require("./src/routes/users");
-const http = require("http");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const { createProxyMiddleware } = require("http-proxy-middleware");
@@ -139,10 +136,15 @@ app.use(
 );
 
 // ==========================
-// Health & Monitoring Routes
-// ==========================
+// Health & Monitoring Routes (always available at /api/health and /api/metrics)
 app.use('/api/health', healthRoutes);
 app.use('/api/metrics', metricsRoutes);
+
+// API Routes with Versioning
+app.use("/api", require("./src/routes"));
+
+// Gateway Aggregator Routes
+app.use("/gateway", gatewayRoutes);
 
 // ==========================
 // Fallback & Errors

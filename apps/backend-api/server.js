@@ -1,45 +1,42 @@
+// ✅ Updated server.js with centralized auth, analytics logging, dynamic health checks
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const http = require("http");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+
 const authRoutes = require("./src/routes/auth");
 const userRoutes = require("./src/routes/users");
-const http = require("http");
 const alertRoutes = require("./routes/alerts");
 const MonitoringService = require("./services/MonitoringService");
 const { setupWebSocket } = require("./utils/websocket");
 const alertLimiter = require("./middleware/alertLimiter");
-const dotenv = require("dotenv");
-const logger = require('./src/utils/logger');
-const mongoose = require("mongoose");
-const gatewayRoutes = require('./src/routes/gatewayRoutes');
+const logger = require("./src/utils/logger");
+const gatewayRoutes = require("./src/routes/gatewayRoutes");
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
-const config = require("./src/config/environment");
-const { createProxyMiddleware } = require("http-proxy-middleware");
 const { errorHandler } = require("./src/middleware/errorHandler");
-
+const authenticate = require("./src/middleware/authenticate");
+const analyticsLogger = require("./src/middleware/analyticsLogger");
+const config = require("./src/config/environment");
 
 // ==========================
 // App Initialization
 // ==========================
 dotenv.config();
-
 const app = express();
 const PORT = config.port || process.env.PORT || 3000;
-const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
-
-app.use('/api', gatewayRoutes);
-
-app.use(limiter)
+const DEBUG = process.env.DEBUG === "true";
 
 // ==========================
 // Middleware
 // ==========================
 app.use(helmet());
 app.use(compression());
-app.use(limiter);
-
+app.use(limiter); // global rate limiter
 app.use(
   cors({
     origin: config.cors.frontendUrl || "http://localhost:3000",
@@ -48,12 +45,11 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
 app.use(morgan("combined"));
+app.use(authenticate); // centralized auth middleware
+app.use(analyticsLogger); // logs each request for analytics
 
 // ==========================
 // MongoDB Connection
@@ -63,8 +59,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // ==========================
 // Proxy Target Pools
@@ -82,10 +78,9 @@ const roundRobinCounter = {
 function getNextTarget(serviceName) {
   const pool = servicePools[serviceName];
   if (!pool || pool.length === 0) {
-    console.warn(`No target defined for service: ${serviceName}`);
+    console.warn(`⚠️ No target defined for service: ${serviceName}`);
     return null;
   }
-
   const index = roundRobinCounter[serviceName];
   roundRobinCounter[serviceName] = (index + 1) % pool.length;
   const target = pool[index];
@@ -96,7 +91,6 @@ function getNextTarget(serviceName) {
 // ==========================
 // Proxy Routes
 // ==========================
-
 app.use(
   "/api/auth",
   authLimiter,
@@ -135,18 +129,39 @@ app.use(
 );
 
 // ==========================
+// Gateway Aggregator Routes
+// ==========================
+app.use("/api", gatewayRoutes);
+
+// ==========================
 // Health Check
 // ==========================
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  const services = Object.keys(servicePools);
+  const health = {};
+
+  await Promise.all(
+    services.map(async (key) => {
+      const target = getNextTarget(key);
+      try {
+        const response = await fetch(`${target}/health`);
+        health[key] = response.ok ? "Healthy" : "Unhealthy";
+      } catch (err) {
+        health[key] = "Unreachable";
+      }
+    })
+  );
+
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    services: health,
   });
 });
 
 // ==========================
-// Fallback & Errors
+// Fallback & Error Handling
 // ==========================
 app.use(errorHandler);
 
@@ -161,11 +176,10 @@ app.use("*", (req, res) => {
 // ==========================
 // Graceful Shutdown
 // ==========================
-
 const shutdown = () => {
-  console.log("Shutdown signal received. Cleaning up...");
+  console.log("\n🛑 Shutdown signal received. Cleaning up...");
   mongoose.connection.close(() => {
-    console.log("MongoDB connection closed.");
+    console.log("🧹 MongoDB connection closed.");
     process.exit(0);
   });
 };
@@ -176,7 +190,6 @@ process.on("SIGINT", shutdown);
 // ==========================
 // Start Server
 // ==========================
-// Only start the server if this file is executed directly (not imported)
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀 API Gateway running on port ${PORT}`);

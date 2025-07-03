@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -7,27 +8,30 @@ const authRoutes = require("./src/routes/auth");
 const userRoutes = require("./src/routes/users");
 const http = require("http");
 const dotenv = require("dotenv");
-const logger = require('./src/utils/logger');
 const mongoose = require("mongoose");
-const gatewayRoutes = require('./src/routes/gatewayRoutes');
-const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
-const config = require("./src/config/environment");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const { errorHandler } = require("./src/middleware/errorHandler");
 
+// Internal modules
+const logger = require('./src/utils/logger');
+const gatewayRoutes = require('./src/routes/gatewayRoutes');
+const healthRoutes = require('./src/routes/health');
+const metricsRoutes = require('./src/routes/metrics');
+const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
+const { errorHandler } = require("./src/middleware/errorHandler");
+const { performanceMonitor } = require('./src/middleware/healthMonitor');
+const { closeRedisConnection } = require('./src/config/redis');
+const { processHealthAlert } = require('./src/services/alertService');
+const config = require("./src/config/environment");
+
+// Load environment variables
+dotenv.config();
 
 // ==========================
 // App Initialization
 // ==========================
-dotenv.config();
-
 const app = express();
 const PORT = config.port || process.env.PORT || 3000;
 const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
-
-app.use('/api', gatewayRoutes);
-
-app.use(limiter)
 
 // ==========================
 // Middleware
@@ -35,6 +39,8 @@ app.use(limiter)
 app.use(helmet());
 app.use(compression());
 app.use(limiter);
+// Add performance monitoring middleware
+app.use(performanceMonitor);
 
 app.use(
   cors({
@@ -45,12 +51,13 @@ app.use(
   })
 );
 
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
 app.use(morgan("combined"));
 
+// ==========================
+// MongoDB Connection
+// ==========================
 // ==========================
 // MongoDB Connection
 // ==========================
@@ -59,8 +66,9 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => logger.info("Connected to MongoDB"))
+  .catch((err) => logger.error("MongoDB connection error:", err));
+
 
 // ==========================
 // Proxy Target Pools
@@ -131,15 +139,10 @@ app.use(
 );
 
 // ==========================
-// Health Check
+// Health & Monitoring Routes
 // ==========================
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
+app.use('/api/health', healthRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // ==========================
 // Fallback & Errors
@@ -157,12 +160,21 @@ app.use("*", (req, res) => {
 // ==========================
 // Graceful Shutdown
 // ==========================
-
 const shutdown = () => {
-  console.log("Shutdown signal received. Cleaning up...");
+  logger.info("Shutdown signal received. Cleaning up...");
+  
+  // Close MongoDB connection
   mongoose.connection.close(() => {
-    console.log("MongoDB connection closed.");
-    process.exit(0);
+    logger.info("MongoDB connection closed.");
+    
+    // Close Redis connection
+    closeRedisConnection().then(() => {
+      logger.info("All connections closed, exiting process.");
+      process.exit(0);
+    }).catch((err) => {
+      logger.error("Error closing Redis connection:", err);
+      process.exit(1);
+    });
   });
 };
 
@@ -172,13 +184,10 @@ process.on("SIGINT", shutdown);
 // ==========================
 // Start Server
 // ==========================
-// Only start the server if this file is executed directly (not imported)
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🚀 API Gateway running on port ${PORT}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
-    if (DEBUG) console.log("🔍 Proxy debug mode is ON");
-  });
-}
+app.listen(PORT, () => {
+  logger.info(`🚀 API Gateway running on port ${PORT}`);
+  logger.info(`🌐 Environment: ${process.env.NODE_ENV || config.nodeEnv || "development"}`);
+  if (DEBUG) logger.info("🔍 Proxy debug mode is ON");
+});
 
 module.exports = app;

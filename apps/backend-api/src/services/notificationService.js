@@ -1,144 +1,141 @@
+const nodemailer = require("nodemailer");
+const NotificationLog = require("../models/NotificationLog");
+
 class NotificationService {
-  constructor(wsService) {
-    this.wsService = wsService
-    this.newsSubscriptions = new Map() // socketId -> Set of categories
-    this.alertSubscriptions = new Set() // Set of socketIds
-    this.newsInterval = null
-    this.alertInterval = null
+  constructor() {
+    this.emailTransporter = this.setupEmailTransporter();
+    this.websocketClients = new Map();
   }
 
-  start() {
-    // Simulate news updates
-    this.newsInterval = setInterval(() => {
-      this.generateNewsUpdates()
-    }, 30000) // Every 30 seconds
-
-    // Simulate system alerts
-    this.alertInterval = setInterval(() => {
-      this.generateSystemAlerts()
-    }, 60000) // Every minute
-
-    console.log("Notification Service started")
-  }
-
-  stop() {
-    if (this.newsInterval) {
-      clearInterval(this.newsInterval)
-    }
-    if (this.alertInterval) {
-      clearInterval(this.alertInterval)
-    }
-  }
-
-  subscribeToNews(socket, categories) {
-    if (!Array.isArray(categories)) {
-      categories = [categories]
-    }
-
-    this.newsSubscriptions.set(socket.id, new Set(categories))
-    socket.emit("news:subscribed", { categories })
-    console.log(`Socket ${socket.id} subscribed to news categories: ${categories.join(", ")}`)
-  }
-
-  subscribeToSystemAlerts(socket) {
-    this.alertSubscriptions.add(socket.id)
-    socket.emit("alerts:subscribed")
-    console.log(`Socket ${socket.id} subscribed to system alerts`)
-  }
-
-  handleDisconnection(socket) {
-    this.newsSubscriptions.delete(socket.id)
-    this.alertSubscriptions.delete(socket.id)
-  }
-
-  generateNewsUpdates() {
-    const newsItems = [
-      {
-        category: "market",
-        title: "Market Update: Tech Stocks Rally",
-        content: "Technology stocks are showing strong performance today...",
-        priority: "medium",
+  setupEmailTransporter() {
+    return nodemailer.createTransporter({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
-      {
-        category: "earnings",
-        title: "Quarterly Earnings Beat Expectations",
-        content: "Several major companies reported better than expected earnings...",
-        priority: "high",
-      },
-      {
-        category: "crypto",
-        title: "Bitcoin Reaches New Monthly High",
-        content: "Bitcoin price surged to new monthly highs amid institutional interest...",
-        priority: "medium",
-      },
-    ]
+    });
+  }
 
-    const randomNews = newsItems[Math.floor(Math.random() * newsItems.length)]
+  async sendNotification(alert, method, metadata) {
+    const log = new NotificationLog({
+      alertId: alert._id,
+      userId: alert.userId,
+      method,
+      status: "PENDING",
+    });
 
-    // Send to subscribers of this news category
-    this.newsSubscriptions.forEach((categories, socketId) => {
-      if (categories.has(randomNews.category)) {
-        const socket = this.wsService.io.sockets.sockets.get(socketId)
-        if (socket) {
-          socket.emit("news:update", {
-            ...randomNews,
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-          })
-        }
+    try {
+      switch (method) {
+        case "EMAIL":
+          await this.sendEmailNotification(alert, metadata);
+          break;
+        case "PUSH":
+          await this.sendPushNotification(alert, metadata);
+          break;
+        case "WEBSOCKET":
+          await this.sendWebSocketNotification(alert, metadata);
+          break;
       }
-    })
+
+      log.status = "SENT";
+      log.sentAt = new Date();
+    } catch (error) {
+      log.status = "FAILED";
+      log.errorDetails = error.message;
+      console.error(`Failed to send ${method} notification:`, error.message);
+    }
+
+    await log.save();
+    return log;
   }
 
-  generateSystemAlerts() {
-    const alerts = [
-      {
-        type: "maintenance",
-        title: "Scheduled Maintenance",
-        message: "System maintenance scheduled for tonight at 2 AM EST",
-        severity: "info",
-      },
-      {
-        type: "security",
-        title: "Security Update",
-        message: "New security features have been enabled for your account",
-        severity: "warning",
-      },
-      {
-        type: "performance",
-        title: "High Server Load",
-        message: "Experiencing higher than normal server load",
-        severity: "warning",
-      },
-    ]
+  async sendEmailNotification(alert, metadata) {
+    if (!this.emailTransporter) {
+      throw new Error("Email transporter not configured");
+    }
 
-    if (Math.random() < 0.3) {
-      // 30% chance of alert
-      const randomAlert = alerts[Math.floor(Math.random() * alerts.length)]
+    const subject = `Price Alert: ${alert.symbol}`;
+    const message = this.formatAlertMessage(alert, metadata);
 
-      // Send to all alert subscribers
-      this.alertSubscriptions.forEach((socketId) => {
-        const socket = this.wsService.io.sockets.sockets.get(socketId)
-        if (socket) {
-          socket.emit("system:alert", {
-            ...randomAlert,
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-          })
-        }
-      })
+    // You'd need to populate user email from user model
+    const mailOptions = {
+      from: process.env.FROM_EMAIL || "alerts@yourapp.com",
+      to: "user@example.com", // Get from user model
+      subject,
+      html: `
+        <h2>${subject}</h2>
+        <p>${message}</p>
+        <hr>
+        <small>You can manage your alerts in your dashboard.</small>
+      `,
+    };
+
+    await this.emailTransporter.sendMail(mailOptions);
+  }
+
+  async sendPushNotification(alert, metadata) {
+    // Implement push notification logic here
+    // This would typically integrate with services like FCM, APNS, etc.
+    console.log(
+      "Push notification sent:",
+      this.formatAlertMessage(alert, metadata)
+    );
+  }
+
+  async sendWebSocketNotification(alert, metadata) {
+    const client = this.websocketClients.get(alert.userId.toString());
+
+    if (client && client.readyState === 1) {
+      const notification = {
+        type: "PRICE_ALERT",
+        alertId: alert._id,
+        symbol: alert.symbol,
+        message: this.formatAlertMessage(alert, metadata),
+        metadata,
+        timestamp: new Date(),
+      };
+
+      client.send(JSON.stringify(notification));
     }
   }
 
-  // Send custom notification to specific user
-  sendNotificationToUser(userId, notification) {
-    this.wsService.broadcastToUser(userId, "notification:custom", notification)
+  formatAlertMessage(alert, metadata) {
+    const { currentPrice, triggerPrice, changePercentage } = metadata;
+
+    switch (alert.alertType) {
+      case "PRICE_ABOVE":
+        return `${
+          alert.symbol
+        } has risen above $${triggerPrice}. Current price: $${currentPrice.toFixed(
+          2
+        )}`;
+      case "PRICE_BELOW":
+        return `${
+          alert.symbol
+        } has fallen below $${triggerPrice}. Current price: $${currentPrice.toFixed(
+          2
+        )}`;
+      case "PERCENTAGE_CHANGE":
+        return `${alert.symbol} has changed by ${changePercentage.toFixed(
+          2
+        )}% in the last ${
+          alert.timeframe
+        }. Current price: $${currentPrice.toFixed(2)}`;
+      default:
+        return `Price alert triggered for ${alert.symbol}`;
+    }
   }
 
-  // Send system-wide announcement
-  sendSystemAnnouncement(announcement) {
-    this.wsService.broadcastToAll("system:announcement", announcement)
+  registerWebSocketClient(userId, ws) {
+    this.websocketClients.set(userId.toString(), ws);
+
+    ws.on("close", () => {
+      this.websocketClients.delete(userId.toString());
+    });
   }
 }
 
-module.exports = NotificationService
+module.exports = new NotificationService();

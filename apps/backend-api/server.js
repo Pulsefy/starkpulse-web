@@ -1,114 +1,195 @@
-const express = require("express")
-const mongoose = require("mongoose")
-const cors = require("cors")
-const helmet = require("helmet")
-const compression = require("compression")
-const morgan = require("morgan")
-const { limiter, authLimiter } = require("./src/middleware/rateLimiter")
-require("dotenv").config()
 
-const { errorHandler } = require("./src/middleware/errorHandler")
-const authRoutes = require("./src/routes/auth")
-const userRoutes = require("./src/routes/users")
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+
+// Internal modules
+const logger = require('./src/utils/logger');
+const gatewayRoutes = require('./src/routes/gatewayRoutes');
+const healthRoutes = require('./src/routes/health');
+const metricsRoutes = require('./src/routes/metrics');
+const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
+const { errorHandler } = require("./src/middleware/errorHandler");
+const { performanceMonitor } = require('./src/middleware/healthMonitor');
+const { closeRedisConnection } = require('./src/config/redis');
+const { processHealthAlert } = require('./src/services/alertService');
+const config = require("./src/config/environment");
+
+// Load environment variables
+dotenv.config();
 
 // ==========================
 // App Initialization
 // ==========================
-const app = express()
-const PORT = process.env.PORT || 3000
+const app = express();
+const PORT = config.port || process.env.PORT || 3000;
+const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
 
 // ==========================
-// Global Middleware
+// Middleware
 // ==========================
-app.use(helmet())
-app.use(compression())
+app.use(helmet());
+app.use(compression());
+app.use(limiter);
+// Add performance monitoring middleware
+app.use(performanceMonitor);
 
-// ==========================
-// Rate Limiting
-// ==========================
-app.use(limiter)
-
-
-// ==========================
-// CORS Configuration
-// ==========================
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: config.cors.frontendUrl || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
-)
+);
 
-// ==========================
-// Body Parsing Middleware
-// ==========================
-app.use(express.json({ limit: "10mb" }))
-app.use(express.urlencoded({ extended: true, limit: "10mb" }))
-
-// ==========================
-// HTTP Logging
-// ==========================
-app.use(morgan("combined"))
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(morgan("combined"));
 
 // ==========================
 // MongoDB Connection
 // ==========================
+// ==========================
+// MongoDB Connection
+// ==========================
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(config.mongodbUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err))
+  .then(() => logger.info("Connected to MongoDB"))
+  .catch((err) => logger.error("MongoDB connection error:", err));
 
 
 // ==========================
-// API Routes
+// Proxy Target Pools
 // ==========================
-app.use("/api/auth", authLimiter, authRoutes)
-app.use("/api/user", userRoutes)
+const servicePools = {
+  AUTH: ["http://localhost:5001", "http://localhost:5002"],
+  USER: ["http://localhost:6001"],
+};
+
+const roundRobinCounter = {
+  AUTH: 0,
+  USER: 0,
+};
+
+function getNextTarget(serviceName) {
+  const pool = servicePools[serviceName];
+  if (!pool || pool.length === 0) {
+    console.warn(`No target defined for service: ${serviceName}`);
+    return null;
+  }
+
+  const index = roundRobinCounter[serviceName];
+  roundRobinCounter[serviceName] = (index + 1) % pool.length;
+  const target = pool[index];
+  if (DEBUG) console.log(`[${serviceName}] → ${target}`);
+  return target;
+}
 
 // ==========================
-// Health Check Endpoint
+// Proxy Routes
 // ==========================
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  })
-})
+
+app.use(
+  "/api/auth",
+  authLimiter,
+  (req, res, next) => {
+    const target = getNextTarget("AUTH");
+    if (!target) return res.status(503).json({ message: "Auth service unavailable" });
+
+    createProxyMiddleware({
+      target,
+      changeOrigin: true,
+      pathRewrite: { "^/api/auth": "/" },
+      onError: (err, req, res) => {
+        console.error("Auth Proxy Error:", err);
+        res.status(502).json({ message: "Bad Gateway - Auth Service" });
+      },
+    })(req, res, next);
+  }
+);
+
+app.use(
+  "/api/user",
+  (req, res, next) => {
+    const target = getNextTarget("USER");
+    if (!target) return res.status(503).json({ message: "User service unavailable" });
+
+    createProxyMiddleware({
+      target,
+      changeOrigin: true,
+      pathRewrite: { "^/api/user": "/" },
+      onError: (err, req, res) => {
+        console.error("User Proxy Error:", err);
+        res.status(502).json({ message: "Bad Gateway - User Service" });
+      },
+    })(req, res, next);
+  }
+);
 
 // ==========================
-// Error Handlers
+// Health & Monitoring Routes (always available at /api/health and /api/metrics)
+app.use('/api/health', healthRoutes);
+app.use('/api/metrics', metricsRoutes);
+
+// API Routes with Versioning
+app.use("/api", require("./src/routes"));
+
+// Gateway Aggregator Routes
+app.use("/gateway", gatewayRoutes);
+
 // ==========================
-app.use(errorHandler)
+// Fallback & Errors
+// ==========================
+app.use(errorHandler);
+
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found",
-  })
-})
+    path: req.originalUrl,
+  });
+});
 
 // ==========================
 // Graceful Shutdown
 // ==========================
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully")
+const shutdown = () => {
+  logger.info("Shutdown signal received. Cleaning up...");
+  
+  // Close MongoDB connection
   mongoose.connection.close(() => {
-    console.log("MongoDB connection closed")
-    process.exit(0)
-  })
-})
+    logger.info("MongoDB connection closed.");
+    
+    // Close Redis connection
+    closeRedisConnection().then(() => {
+      logger.info("All connections closed, exiting process.");
+      process.exit(0);
+    }).catch((err) => {
+      logger.error("Error closing Redis connection:", err);
+      process.exit(1);
+    });
+  });
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 // ==========================
-// Server Start
+// Start Server
 // ==========================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`)
-})
+  logger.info(`🚀 API Gateway running on port ${PORT}`);
+  logger.info(`🌐 Environment: ${process.env.NODE_ENV || config.nodeEnv || "development"}`);
+  if (DEBUG) logger.info("🔍 Proxy debug mode is ON");
+});
 
-module.exports = app
+module.exports = app;

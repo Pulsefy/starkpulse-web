@@ -35,3 +35,8 @@ if __name__ == '__main__':
         benchmark = prices['SPY']
         comparison_df = compare_to_benchmark(portfolio_value, benchmark)
         plot_value_curve(comparison_df)
+
+
+
+
+        

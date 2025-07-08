@@ -9,7 +9,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "audit": "npm audit --audit-level=high",
-    "scan": "npx retire"
+    "scan": "npx retire",
+    "backfill:elasticsearch": "node scripts/backfill-elasticsearch.js"
   },
   "keywords": [
     "express",
@@ -21,7 +22,6 @@
   "dependencies": {
 
     "connect-redis": "^9.0.0",
-    "express": "^4.21.2",
     "express-session": "^1.18.1",
     "redis": "^5.5.6",
 

@@ -54,11 +54,8 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
-    "eslint-config-next": "13.5.1",
-    "gsap": "^3.12.7",
-    "input-otp": "^1.2.4",
-    "lucide-react": "^0.446.0",
-    "next": "13.5.1",
+    "lucide-react": "^0.525.0",
+    "next": "^14.0.0",
     "next-themes": "^0.3.0",
     "postcss": "8.4.30",
     "react": "18.2.0",
@@ -76,5 +73,9 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^14.0.0",
+    "eslint-config-next": "^14.0.0"
   }
 }

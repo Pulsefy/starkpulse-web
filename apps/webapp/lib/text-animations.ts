@@ -1,3 +1,5 @@
+import { gsap } from "gsap";
+
 interface AnimationOptions {
     direction?: "normal" | "reverse" | "alternate"
     duration?: number
@@ -5,37 +7,39 @@ interface AnimationOptions {
   }
   
   export function textChangeAnimation(element: HTMLElement, onComplete: () => void, options: AnimationOptions = {}) {
-    // Mock implementation - replace with your actual GSAP animation
-    const { direction = "normal", duration = 0.5 } = options
-  
-    // Simulate animation with setTimeout
-    setTimeout(() => {
-      element.style.opacity = "0"
-  
-      setTimeout(() => {
-        onComplete()
-        element.style.opacity = "1"
-      }, duration * 500)
-    }, duration * 500)
-  
-    // Note: In a real implementation, you would use GSAP like:
-    /*
-    import gsap from "gsap";
+    const { duration = 0.5, ease = "power2.inOut" } = options;
     
     gsap.to(element, {
       opacity: 0,
       duration: duration / 2,
+      ease: ease,
       onComplete: () => {
         onComplete();
         gsap.to(element, {
           opacity: 1,
           duration: duration / 2,
-          ease: options.ease || "power2.inOut"
+          ease: ease
         });
-      },
-      ease: options.ease || "power2.inOut"
+      }
     });
-    */
+  }
+  
+  export function containerFadeIn(element: HTMLElement, options: AnimationOptions = {}) {
+    // Mock implementation - replace with your actual GSAP animation
+    const { duration = 1 } = options;
+    
+    // Set initial state
+    element.style.opacity = "0";
+    element.style.transform = "translateY(20px)";
+    
+    // Animate in
+    setTimeout(() => {
+      element.style.transition = `opacity ${duration}s ease-out, transform ${duration}s ease-out`;
+      element.style.opacity = "1";
+      element.style.transform = "translateY(0)";
+    }, 10);
+    
+    
   }
   
   export function fadeInAnimation(element: HTMLElement, options: AnimationOptions = {}) {
@@ -47,8 +51,6 @@ interface AnimationOptions {
     setTimeout(() => {
       element.style.opacity = "1"
     }, 10)
-  
-    
   }
-  
-  
+    
+    

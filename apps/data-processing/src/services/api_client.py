@@ -508,9 +508,6 @@ class CoinMarketCapClient(UnifiedAPIClient):
         }
         return await self.get('cryptocurrency/quotes/historical', params=params, headers=headers)
 
-class NewsAPIClient(APIClient):
-    """News API client"""
-
 class NewsAPIClient(UnifiedAPIClient):
     """News API client with specialized methods"""
     
@@ -532,7 +529,7 @@ class NewsAPIClient(UnifiedAPIClient):
             settings=settings
         )
         self.api_key = settings.news_api_key
-    
+
     async def get_everything(self, query: str, from_date: str = None, 
                            to_date: str = None, page_size: int = 100,
                            language: str = 'en', sort_by: str = 'publishedAt') -> Dict[str, Any]:
@@ -638,4 +635,8 @@ class CoingeckoClient(UnifiedAPIClient):
             'community_data': str(community_data).lower(),
             'developer_data': str(developer_data).lower()
         }
-        return await self.get(f'coins/{coin_id}', params=params) 
+        return await self.get(f'coins/{coin_id}', params=params)
+
+# Add at the end of the file for backward compatibility
+APIClient = UnifiedAPIClient
+CoinGeckoClient = CoingeckoClient  # Also add this alias for consistency

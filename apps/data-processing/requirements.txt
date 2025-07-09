@@ -3,7 +3,7 @@ requests>=2.31.0
 pandas>=2.0.0
 numpy>=1.24.0
 python-dotenv>=1.0.0
-openpyxlpa
+openpyxl
 pyarrow
 apscheduler
 
@@ -24,7 +24,7 @@ feedparser>=6.0.10
 
 # Blockchain and crypto
 web3>=6.0.0
-starknet-py>=0.20.0
+starknet-py>=0.25.0
 ccxt>=4.0.0
 
 # Caching and message queues

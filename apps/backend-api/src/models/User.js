@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const SearchService = require('../services/searchService');
 
 const userSchema = new mongoose.Schema(
   {
@@ -306,5 +307,27 @@ userSchema.methods.hasValidRefreshToken = function (token) {
     (rt) => rt.token === token && rt.expiresAt > now
   );
 };
+
+// ==========================
+// Post-save hook for Elasticsearch indexing
+// ==========================
+userSchema.post('save', async function(doc) {
+  try {
+    await SearchService.indexDocument('user', doc._id.toString(), doc.toObject());
+  } catch (err) {
+    console.error('Elasticsearch index error (User):', err);
+  }
+});
+
+// ==========================
+// Post-remove hook for Elasticsearch removal
+// ==========================
+userSchema.post('remove', async function(doc) {
+  try {
+    await SearchService.removeDocument('user', doc._id.toString());
+  } catch (err) {
+    console.error('Elasticsearch remove error (User):', err);
+  }
+});
 
 module.exports = mongoose.model("User", userSchema);

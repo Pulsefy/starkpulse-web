@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const SearchService = require('../services/searchService');
 
 const newsSchema = new mongoose.Schema(
   {
@@ -183,5 +184,21 @@ newsSchema.statics.searchNews = function(query, options = {}) {
     .limit(limit)
     .lean();
 };
+
+newsSchema.post('save', async function(doc) {
+  try {
+    await SearchService.indexDocument('news', doc._id.toString(), doc.toObject());
+  } catch (err) {
+    console.error('Elasticsearch index error (News):', err);
+  }
+});
+
+newsSchema.post('remove', async function(doc) {
+  try {
+    await SearchService.removeDocument('news', doc._id.toString());
+  } catch (err) {
+    console.error('Elasticsearch remove error (News):', err);
+  }
+});
 
 module.exports = mongoose.model('News', newsSchema);

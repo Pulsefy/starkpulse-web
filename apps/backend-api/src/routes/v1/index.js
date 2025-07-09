@@ -16,6 +16,7 @@ const healthRoutes = require('../health');
 const newsRoutes = require('../news');
 const portfolioRoutes = require('../portfolio');
 const starknetRoutes = require('../starknet');
+const searchRoutes = require('./search');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -27,5 +28,6 @@ router.use('/health', healthRoutes);
 router.use('/news', newsRoutes);
 router.use('/portfolio', portfolioRoutes);
 router.use('/starknet', starknetRoutes);
+router.use('/search', searchRoutes);
 
 module.exports = router;

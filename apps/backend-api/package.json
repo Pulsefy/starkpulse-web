@@ -21,7 +21,6 @@
   "dependencies": {
 
     "connect-redis": "^9.0.0",
-    "express": "^4.21.2",
     "express-session": "^1.18.1",
     "redis": "^5.5.6",
 
@@ -43,7 +42,8 @@
     "pino": "^9.7.0",
     "pino-pretty": "^13.0.0",
     "ratelimiter": "^3.4.1",
-    "semver": "^7.5.4"
+    "semver": "^7.5.4",
+    "node-mailjet": "6.0.8"
   },
   "devDependencies": {
     "artillery": "^2.0.23",

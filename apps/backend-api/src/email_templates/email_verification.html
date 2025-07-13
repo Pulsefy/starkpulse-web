@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New User Email Verification</title>
+</head>
+<body>
+<div style="max-width:600px; margin:0 auto; font-family:Arial,sans-serif; color:#333;">
+    <h2 style="text-align:center; color:#28a745;">Verify your email address</h2>
+    <p style="font-size:16px; color:#555; text-align:center;">Hi {{firstName}},</p>
+    <p style="color:#555;">
+        Click below to verify your email and finish setting up your account:
+    </p>
+    <div style="text-align:center; margin:30px 0;">
+        <a href="{{verificationLink}}"
+           style="background-color:#28a745; color:#fff; text-decoration:none; padding:12px 24px; border-radius:4px; display:inline-block;">
+            Verify Email
+        </a>
+    </div>
+    <p style="background:#d1ecf1; border:1px solid #bee5eb; padding:10px; border-radius:4px; font-size:13px; color:#0c5460;">
+        This link expires in 24 hours.
+    </p>
+    <p style="font-size:14px; color:#999; text-align:center;">
+        Didn't create an account? Please ignore this email.
+    </p>
+    <p style="text-align:center; color:#bbb; font-size:12px;">
+        © {{year}} {{appName}}. All rights reserved.
+    </p>
+</div>
+</body>
+</html>

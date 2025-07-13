@@ -11,7 +11,6 @@ const emailService = new EmailService();
 
 queue.process("send_email", (async (job) => {
     // call on the email service here
-
     await emailService.sendEmail({
         templateName: job.data.templateName,
         templateBodyStructure: job.data

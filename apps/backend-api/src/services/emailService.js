@@ -11,7 +11,7 @@ class EmailService {
 
   constructor() {
     this.appName = "stark_plus web";
-    this.appDefaultEmail = "";
+    this.appDefaultEmail = (process.env.STARK_PLUS_EMAIL).toString().trim();
     this.apiKey = (process.env.APi_KEY).toString().trim();
     this.apiSecretKey = (process.env.APi_SECRET_KEY).toString().trim();
     // this.emailSender = require('node-mailjet').apiConnect(this.apiKey, this.apiSecretKey);

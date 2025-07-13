@@ -1,5 +1,9 @@
 const User = require("../models/User");
-const emailService = require("./emailService");
+// const emailService = require("./emailService");
+const { queue } = require("../middleware/queues/queues");
+const { EmailJobType } = require("../middleware/queues/jobs/email_job_type");
+
+export const APP_NAME = "StarkPlus";
 
 class UserService {
   // ==========================
@@ -90,14 +94,23 @@ class UserService {
 
     await User.findByIdAndDelete(userId);
 
-    try {
-      await emailService.sendAccountDeletionEmail(
-        userInfo.email,
-        userInfo.firstName
-      );
-    } catch (emailError) {
-      console.error("Failed to send deletion email:", emailError);
-    }
+    // try {
+    //   await emailService.sendAccountDeletionEmail(
+    //     userInfo.email,
+    //     userInfo.firstName
+    //   );
+    // } catch (emailError) {
+    //   console.error("Failed to send deletion email:", emailError);
+    // }
+
+    // create the job here
+    EmailJobType.firstName = user.firstName;
+    EmailJobType.templateName = "delete_account.html";
+    EmailJobType.appName = APP_NAME; // using a constant so it can the the same through the app
+    EmailJobType.year = (new Date().getFullYear()).toString();
+
+
+    await queue.add(EmailJobType);
 
     return true;
   }

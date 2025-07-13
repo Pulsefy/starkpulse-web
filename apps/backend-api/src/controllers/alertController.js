@@ -1,8 +1,9 @@
 const AlertService = require("../services/AlertService");
 const { validationResult } = require("express-validator");
 
+// Cache buster - updated at [current timestamp]
 class AlertController {
-  async createAlert(req, res) {
+  static async createAlert(req, res) {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -27,7 +28,7 @@ class AlertController {
     }
   }
 
-  async getAlerts(req, res) {
+  static async getAlerts(req, res) {
     try {
       const options = {
         isActive:
@@ -53,7 +54,7 @@ class AlertController {
     }
   }
 
-  async getAlert(req, res) {
+  static async getAlert(req, res) {
     try {
       const alert = await Alert.findOne({
         _id: req.params.id,
@@ -79,7 +80,7 @@ class AlertController {
     }
   }
 
-  async updateAlert(req, res) {
+  static async updateAlert(req, res) {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -108,7 +109,7 @@ class AlertController {
     }
   }
 
-  async deleteAlert(req, res) {
+  static async deleteAlert(req, res) {
     try {
       await AlertService.deleteAlert(req.params.id, req.user.id);
 
@@ -124,7 +125,7 @@ class AlertController {
     }
   }
 
-  async toggleAlert(req, res) {
+  static async toggleAlert(req, res) {
     try {
       const alert = await AlertService.updateAlert(req.params.id, req.user.id, {
         isActive: req.body.isActive,
@@ -144,4 +145,4 @@ class AlertController {
   }
 }
 
-module.exports = new AlertController();
+module.exports = AlertController;

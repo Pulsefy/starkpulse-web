@@ -17,7 +17,11 @@ import {
 import WalletButton from "./wallet-button";
 // Remove the useWallet import since it's causing issues
 // import { useWallet } from "@/hooks/use-wallet";
-import { WalletConnectModal } from "./wallet-connect-modal";
+// Change this line:
+// import { WalletConnectModal } from "./wallet-connect-modal";
+
+// To this:
+import { WalletConnectModal } from "./wallet-connect-model";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -179,7 +183,11 @@ export function Navbar() {
                             >
                               <div className="flex items-start gap-3">
                                 <div
-                                  className={`w-2 h-2 rounded-full mt-2 ${notification.read ? "bg-gray-500" : "bg-[#db74cf]"}`}
+                                  className={`w-2 h-2 rounded-full mt-2 ${
+                                    notification.read
+                                      ? "bg-gray-500"
+                                      : "bg-[#db74cf]"
+                                  }`}
                                 ></div>
                                 <div>
                                   <p className="text-sm font-medium text-white">

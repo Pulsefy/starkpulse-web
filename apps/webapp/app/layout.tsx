@@ -1,5 +1,5 @@
 import { StarsAnimation } from "@/components/stars-animation";
-import "./globals.css";
+import "../globals.css"; // Changed from "./globals.css" to "../globals.css"
 import type { Metadata } from "next";
 import {
   Inter,
@@ -8,6 +8,7 @@ import {
   Chakra_Petch,
   Poppins,
 } from "next/font/google";
+import { StarknetProvider } from "@/providers/starknet-provider";
 
 // Font definitions
 const inter = Inter({
@@ -36,21 +37,17 @@ const chakraPetch = Chakra_Petch({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "StarkPulse - Decentralized Crypto News Platform",
-  description:
-    "Your trusted source for crypto news, trends, and insights powered by StarkNet.",
-};
-
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
 });
 
-// Add this import at the top
-import { StarknetProvider } from "@/providers/starknet-provider";
-import "./globals.css";
+export const metadata: Metadata = {
+  title: "StarkPulse - Decentralized Crypto News Platform",
+  description:
+    "Your trusted source for crypto news, trends, and insights powered by StarkNet.",
+};
 
 export default function RootLayout({
   children,
@@ -59,7 +56,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <head>
+        <link rel="icon" href="data:," />
+      </head>
+      <body
+        className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable}`}
+      >
         <StarknetProvider>{children}</StarknetProvider>
       </body>
     </html>

@@ -20,6 +20,7 @@ from ..utils.helpers import calculate_percentage_change
 
 logger = setup_logger(__name__)
 
+class CryptoDataProcessor:
     """
     Processor for cryptocurrency data collection and processing with validation, anomaly detection, and quality monitoring
     """
@@ -594,4 +595,3 @@ logger = setup_logger(__name__)
             
         except Exception as e:
             logger.error(f"Error calculating market metrics for {symbol}: {str(e)}")
-            return None

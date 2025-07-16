@@ -307,4 +307,15 @@ userSchema.methods.hasValidRefreshToken = function (token) {
   );
 };
 
+
+// Elasticsearch indexing hook (non-intrusive)
+const searchService = require('../services/search.service');
+userSchema.post('save', function(doc) {
+  searchService.indexDocument({
+    index: 'users',
+    id: doc._id.toString(),
+    body: doc.toObject(),
+  }).catch(() => {});
+});
+
 module.exports = mongoose.model("User", userSchema);

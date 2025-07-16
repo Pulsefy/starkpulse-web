@@ -26,7 +26,11 @@ router.use('/crypto', cryptoRoutes);
 router.use('/health', healthRoutes);
 router.use('/news', newsRoutes);
 router.use('/portfolio', portfolioRoutes);
+
 router.use('/starknet', starknetRoutes);
+
+// Advanced search and filtering routes
+router.use('/search', require('../search'));
 
 // Version-specific routes
 router.get('/version', (req, res) => {

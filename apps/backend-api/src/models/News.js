@@ -184,4 +184,15 @@ newsSchema.statics.searchNews = function(query, options = {}) {
     .lean();
 };
 
+
+// Elasticsearch indexing hook (non-intrusive)
+const searchService = require('../services/search.service');
+newsSchema.post('save', function(doc) {
+  searchService.indexDocument({
+    index: 'news',
+    id: doc._id.toString(),
+    body: doc.toObject(),
+  }).catch(() => {}); // Fail silently to avoid breaking save
+});
+
 module.exports = mongoose.model('News', newsSchema);

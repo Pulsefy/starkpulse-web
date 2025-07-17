@@ -58,13 +58,13 @@ app.use(morgan("combined"));
 // ==========================
 // MongoDB Connection
 // ==========================
-mongoose
-  .connect(config.mongodbUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => logger.info("Connected to MongoDB"))
-  .catch((err) => logger.error("MongoDB connection error:", err));
+// mongoose
+//   .connect(config.mongodbUri, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .then(() => logger.info("Connected to MongoDB"))
+//   .catch((err) => logger.error("MongoDB connection error:", err));
 
 
 // ==========================
@@ -141,7 +141,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/metrics', metricsRoutes);
 
 // API Routes with Versioning
-app.use("/api", require("./src/routes"));
+// app.use("/api", require("./src/routes"));
 
 // Gateway Aggregator Routes
 app.use("/gateway", gatewayRoutes);

@@ -1,194 +1,63 @@
-const nodemailer = require("nodemailer")
-const config = require('../config/environment')
+import * as Path from "node:path";
+import mail_jet from "node-mailjet";
+import * as fs from "node:fs";
+
+// const nodemailer = require("nodemailer")
+// const config = require('../config/environment')
+require('dotenv').config();
+
 
 class EmailService {
+
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: config.email.host,
-      port: config.email.port,
-      secure: false, // Set to true if using SSL
-      auth: {
-        user: config.email.user,
-        pass: config.email.password,
-      },
-    })
+    this.appName = "stark_plus web";
+    this.appDefaultEmail = (process.env.STARK_PLUS_EMAIL).toString().trim();
+    this.apiKey = (process.env.APi_KEY).toString().trim();
+    this.apiSecretKey = (process.env.APi_SECRET_KEY).toString().trim();
+    // this.emailSender = require('node-mailjet').apiConnect(this.apiKey, this.apiSecretKey);
+
+    // instantiate the email
+    this.emailSender = mail_jet.apiConnect(this.apiKey, this.apiSecretKey);
   }
 
-  async sendWelcomeEmail(email, firstName) {
-    const mailOptions = {
-      from: config.email.from,
-      to: email,
-      subject: "Welcome to Our Platform!",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin-bottom: 10px;">Welcome ${firstName}!</h1>
-            <p style="color: #666; font-size: 16px;">Thank you for joining our platform</p>
-          </div>
+  async sendEmail({templateName, templateBodyStructure}) {
 
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="color: #333; margin-top: 0;">Getting Started</h2>
-            <p style="color: #666; line-height: 1.6;">
-              We're excited to have you on board! You can now access all features of your account and customize your experience according to your preferences.
-            </p>
-          </div>
+    const htmlFile = this.templateReader(templateName, templateBodyStructure);
 
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.cors.frontendUrl}/dashboard"
-               style="background-color: #007cba; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Go to Dashboard
-            </a>
-          </div>
-
-          <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              If you have any questions, feel free to contact our support team.<br>
-              Best regards,<br>The Team
-            </p>
-          </div>
-        </div>
-      `,
-    }
-
-    return await this.transporter.sendMail(mailOptions)
+    return await this.emailSender.post("send", {version: 'v3.1'}).request({
+      Messages: [
+        {
+          From: {
+            Email: this.appDefaultEmail,
+            Name: this.appName,
+          },
+          To: [
+            {
+              Email: templateBodyStructure.userEmail,
+              Name: templateBodyStructure.firstName,
+            },
+          ],
+          Subject: templateBodyStructure.subject,
+          // TextPart: "this is the text part",
+          HtmlPart: htmlFile,
+        },
+      ],
+    });
   }
 
-  async sendPasswordResetEmail(email, firstName, resetToken) {
-    const resetUrl = `${config.cors.frontendUrl}/reset-password?token=${resetToken}`
+  templateReader(templateName, templateBodyStructure) {
+    // locate the file
+    let filePath = Path.join(__dirname, "../email_templates/", templateName );
+    let htmlFile = fs.readFileSync(filePath, "utf8");
 
-    const mailOptions = {
-      from: config.email.from,
-      to: email,
-      subject: "Password Reset Request",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin-bottom: 10px;">Password Reset Request</h1>
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <p style="color: #666; font-size: 16px;">Hi ${firstName},</p>
-            <p style="color: #666; line-height: 1.6;">
-              You requested a password reset for your account. Click the button below to reset your password:
-            </p>
-          </div>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}"
-               style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Reset Password
-            </a>
-          </div>
-
-          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <p style="color: #856404; margin: 0; font-size: 14px;">
-              <strong>Security Notice:</strong> This link will expire in 1 hour for security reasons.
-            </p>
-          </div>
-
-          <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              If you didn't request this password reset, please ignore this email.<br>
-              Your password will remain unchanged.<br><br>
-              Best regards,<br>The Team
-            </p>
-          </div>
-        </div>
-      `,
+    // read the content of the file and directly insert the variables there
+    for (const [key, value] of Object.entries(templateBodyStructure) ){
+      // check for matches in the file and the key of templateBody
+      htmlFile = htmlFile.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), value.toString());
     }
 
-    return await this.transporter.sendMail(mailOptions)
-  }
-
-  async sendAccountDeletionEmail(email, firstName) {
-    const mailOptions = {
-      from: config.email.from,
-      to: email,
-      subject: "Account Deletion Confirmation",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin-bottom: 10px;">Account Deletion Confirmation</h1>
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <p style="color: #666; font-size: 16px;">Hi ${firstName},</p>
-            <p style="color: #666; line-height: 1.6;">
-              Your account has been successfully deleted as requested.
-            </p>
-          </div>
-
-          <div style="background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <p style="color: #155724; margin: 0; font-size: 14px;">
-              <strong>GDPR Compliance:</strong> All your personal data has been permanently removed from our systems in compliance with GDPR regulations.
-            </p>
-          </div>
-
-          <div style="margin: 20px 0;">
-            <p style="color: #666; line-height: 1.6;">
-              We're sorry to see you go. If you have any questions or concerns about the deletion process,
-              please contact our support team within the next 30 days.
-            </p>
-          </div>
-
-          <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              Thank you for being part of our community.<br><br>
-              Best regards,<br>The Team
-            </p>
-          </div>
-        </div>
-      `,
-    }
-
-    return await this.transporter.sendMail(mailOptions)
-  }
-
-  async sendEmailVerificationEmail(email, firstName, verificationToken) {
-    const verificationUrl = `${config.cors.frontendUrl}/verify-email?token=${verificationToken}`
-
-    const mailOptions = {
-      from: config.email.from,
-      to: email,
-      subject: "Please Verify Your Email Address",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin-bottom: 10px;">Verify Your Email Address</h1>
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <p style="color: #666; font-size: 16px;">Hi ${firstName},</p>
-            <p style="color: #666; line-height: 1.6;">
-              Please click the button below to verify your email address and complete your account setup:
-            </p>
-          </div>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}"
-               style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Verify Email Address
-            </a>
-          </div>
-
-          <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <p style="color: #0c5460; margin: 0; font-size: 14px;">
-              <strong>Note:</strong> This verification link will expire in 24 hours.
-            </p>
-          </div>
-
-          <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #999; font-size: 14px; text-align: center;">
-              If you didn't create this account, please ignore this email.<br><br>
-              Best regards,<br>The Team
-            </p>
-          </div>
-        </div>
-      `,
-    }
-
-    return await this.transporter.sendMail(mailOptions)
+    return htmlFile;
   }
 }
 
-module.exports = new EmailService()
+module.exports = EmailService;

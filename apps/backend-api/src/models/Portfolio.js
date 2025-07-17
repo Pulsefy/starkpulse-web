@@ -55,4 +55,15 @@ portfolioSchema.pre('save', function(next) {
   next();
 });
 
+
+// Elasticsearch indexing hook (non-intrusive)
+const searchService = require('../services/search.service');
+portfolioSchema.post('save', function(doc) {
+  searchService.indexDocument({
+    index: 'portfolio',
+    id: doc._id.toString(),
+    body: doc.toObject(),
+  }).catch(() => {});
+});
+
 module.exports = mongoose.model('Portfolio', portfolioSchema);

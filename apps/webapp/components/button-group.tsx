@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Rocket, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function ButtonGroup() {
   const [hoverJoin, setHoverJoin] = useState(false);
   const [hoverExplore, setHoverExplore] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
     <div className="flex justify-center gap-4">
@@ -26,7 +28,7 @@ export function ButtonGroup() {
         }}
       >
         <span className="relative z-10 flex items-center gap-2">
-          Join Community{" "}
+          {t('buttons.join_community')}{" "}
           <Users
             className={`h-4 w-4 transition-transform duration-300 ${hoverJoin ? "translate-x-1" : ""}`}
           />
@@ -55,7 +57,7 @@ export function ButtonGroup() {
         }}
       >
         <span className="relative z-10 flex items-center gap-2">
-          Explore Platform{" "}
+          {t('buttons.explore_platform')}{" "}
           <Rocket
             className={`h-4 w-4 transition-transform duration-300 ${hoverExplore ? "translate-x-1" : ""}`}
           />

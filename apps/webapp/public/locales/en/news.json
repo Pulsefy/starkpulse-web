@@ -1,0 +1,13 @@
+{
+  "page_title": "Cryptocurrency Prices by Market Cap",
+  "loading_error": "Failed to load cryptocurrency data",
+  "news_loading_error": "Failed to load news data",
+  "retry_button": "Retry",
+  "market_cap": "Market Cap",
+  "price": "Price",
+  "change_24h": "24h Change",
+  "volume": "Volume",
+  "rank": "Rank",
+  "name": "Name",
+  "symbol": "Symbol"
+} 

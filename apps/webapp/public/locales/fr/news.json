@@ -1,0 +1,13 @@
+{
+  "page_title": "Prix des Cryptomonnaies par Capitalisation Boursière",
+  "loading_error": "Échec du chargement des données de cryptomonnaie",
+  "news_loading_error": "Échec du chargement des actualités",
+  "retry_button": "Réessayer",
+  "market_cap": "Capitalisation",
+  "price": "Prix",
+  "change_24h": "Variation 24h",
+  "volume": "Volume",
+  "rank": "Rang",
+  "name": "Nom",
+  "symbol": "Symbole"
+} 

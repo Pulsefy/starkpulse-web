@@ -9,8 +9,10 @@ import { CryptoTable } from "@/components/crypto-table";
 import { PortfolioSummary } from "@/components/portfolio-summary";
 import { EarningsDashboard } from "@/components/earnings-dashboard";
 import { mockNewsData } from "@/lib/mock-data";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Dashboard() {
+  const { t } = useTranslation('dashboard');
   const [activeView, setActiveView] = useState("home");
   const [newsData] = useState(mockNewsData);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
@@ -61,7 +63,7 @@ export default function Dashboard() {
           <CryptoTable formatNumberAction={formatNumber} />
         ) : activeView === "portfolio" ? (
           <div className="space-y-6">
-            <h1 className="text-2xl font-bold mb-4">Portfolio</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('portfolio')}</h1>
             <PortfolioSummary />
             {/* You can add more portfolio-related components here */}
           </div>
@@ -69,8 +71,8 @@ export default function Dashboard() {
           <EarningsDashboard />
         ) : (
           <div>
-            <h1 className="text-2xl font-bold mb-4">Dashboard Home</h1>
-            <p>Welcome to StarkPulse Dashboard</p>
+            <h1 className="text-2xl font-bold mb-4">{t('dashboard_home')}</h1>
+            <p>{t('welcome_message')}</p>
           </div>
         )}
       </div>

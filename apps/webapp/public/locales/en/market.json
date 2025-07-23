@@ -1,0 +1,16 @@
+{
+  "market": "Market",
+  "market_trends": "Market Trends",
+  "chart_placeholder": "Market chart visualization will appear here",
+  "time_periods": {
+    "24h": "24H",
+    "7d": "7D",
+    "1m": "1M"
+  },
+  "table_headers": {
+    "1h": "1h",
+    "24h": "24h",
+    "7d": "7d",
+    "last_7_days": "Last 7 Days"
+  }
+} 

@@ -99,3 +99,6 @@ docker-compose>=1.29.0
 # tox>=4.11.0
 # nox>=2023.4.22
 # invoke>=2.2.0
+
+pytest
+coverage

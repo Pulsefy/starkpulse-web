@@ -106,3 +106,9 @@ rich>=13.6.0
 # pymongo>=4.5.0
 # elasticsearch>=8.10.0
 # influxdb-client>=1.38.0
+
+transformers
+spacy
+scikit-learn
+spacy-langdetect
+spacy[fr]

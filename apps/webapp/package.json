@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "update-db": "npx update-browserslist-db@latest"
+    "update-db": "npx update-browserslist-db@latest",
+    "prepare": "cd .. && husky webapp/.husky",
+    "format": "biome format . --write",
+    "typecheck": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -75,7 +78,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@commitlint/config-conventional": "^19.8.1",
     "@next/eslint-plugin-next": "^14.0.0",
-    "eslint-config-next": "^14.0.0"
+    "commitlint": "^19.8.1",
+    "eslint-config-next": "^14.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2"
   }
+  
 }

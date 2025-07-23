@@ -22,6 +22,7 @@ import WalletButton from "./wallet-button";
 
 // To this:
 import { WalletConnectModal } from "./wallet-connect-model";
+import InstallPWAButton from "@/components/InstallPWAButton";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -345,6 +346,7 @@ export function Navbar() {
         isOpen={isWalletModalOpen}
         onCloseAction={() => setIsWalletModalOpen(false)}
       />
+      <InstallPWAButton />
     </nav>
   );
 }

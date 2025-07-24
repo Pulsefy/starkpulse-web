@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -9,16 +8,23 @@ const mongoose = require("mongoose");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
 // Internal modules
-const logger = require('./src/utils/logger');
-const gatewayRoutes = require('./src/routes/gatewayRoutes');
-const healthRoutes = require('./src/routes/health');
-const metricsRoutes = require('./src/routes/metrics');
+const logger = require("./src/utils/logger");
+const gatewayRoutes = require("./src/routes/gatewayRoutes");
+const healthRoutes = require("./src/routes/health");
+const metricsRoutes = require("./src/routes/metrics");
 const { limiter, authLimiter } = require("./src/middleware/rateLimiter");
 const { errorHandler } = require("./src/middleware/errorHandler");
-const { performanceMonitor } = require('./src/middleware/healthMonitor');
-const { closeRedisConnection } = require('./src/config/redis');
-const { processHealthAlert } = require('./src/services/alertService');
+const { performanceMonitor } = require("./src/middleware/healthMonitor");
+const { closeRedisConnection } = require("./src/config/redis");
+const { processHealthAlert } = require("./src/services/alertService");
 const config = require("./src/config/environment");
+const { validationRouter } = require("./routes/validation");
+const { validatorRouter } = require("./routes/validators");
+const { contentRouter } = require("./routes/content");
+const { governanceRouter } = require("./routes/governance");
+const { ValidationNetwork } = require("./services/ValidationNetwork");
+const { ConsensusEngine } = require("./services/ConsensusEngine");
+const { ReputationSystem } = require("./services/ReputationSystem");
 
 // Load environment variables
 dotenv.config();
@@ -66,7 +72,6 @@ app.use(morgan("combined"));
 //   .then(() => logger.info("Connected to MongoDB"))
 //   .catch((err) => logger.error("MongoDB connection error:", err));
 
-
 // ==========================
 // Proxy Target Pools
 // ==========================
@@ -98,47 +103,58 @@ function getNextTarget(serviceName) {
 // Proxy Routes
 // ==========================
 
-app.use(
-  "/api/auth",
-  authLimiter,
-  (req, res, next) => {
-    const target = getNextTarget("AUTH");
-    if (!target) return res.status(503).json({ message: "Auth service unavailable" });
+// Initialize core services
+const validationNetwork = new ValidationNetwork();
+const consensusEngine = new ConsensusEngine();
+const reputationSystem = new ReputationSystem();
 
-    createProxyMiddleware({
-      target,
-      changeOrigin: true,
-      pathRewrite: { "^/api/auth": "/" },
-      onError: (err, req, res) => {
-        console.error("Auth Proxy Error:", err);
-        res.status(502).json({ message: "Bad Gateway - Auth Service" });
-      },
-    })(req, res, next);
-  }
-);
+// Make services available to routes
+app.locals.validationNetwork = validationNetwork;
+app.locals.consensusEngine = consensusEngine;
+app.locals.reputationSystem = reputationSystem;
 
-app.use(
-  "/api/user",
-  (req, res, next) => {
-    const target = getNextTarget("USER");
-    if (!target) return res.status(503).json({ message: "User service unavailable" });
+// Routes
+app.use("/api/validation", validationRouter);
+app.use("/api/validators", validatorRouter);
+app.use("/api/content", contentRouter);
+app.use("/api/governance", governanceRouter);
 
-    createProxyMiddleware({
-      target,
-      changeOrigin: true,
-      pathRewrite: { "^/api/user": "/" },
-      onError: (err, req, res) => {
-        console.error("User Proxy Error:", err);
-        res.status(502).json({ message: "Bad Gateway - User Service" });
-      },
-    })(req, res, next);
-  }
-);
+app.use("/api/auth", authLimiter, (req, res, next) => {
+  const target = getNextTarget("AUTH");
+  if (!target)
+    return res.status(503).json({ message: "Auth service unavailable" });
+
+  createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: { "^/api/auth": "/" },
+    onError: (err, req, res) => {
+      console.error("Auth Proxy Error:", err);
+      res.status(502).json({ message: "Bad Gateway - Auth Service" });
+    },
+  })(req, res, next);
+});
+
+app.use("/api/user", (req, res, next) => {
+  const target = getNextTarget("USER");
+  if (!target)
+    return res.status(503).json({ message: "User service unavailable" });
+
+  createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: { "^/api/user": "/" },
+    onError: (err, req, res) => {
+      console.error("User Proxy Error:", err);
+      res.status(502).json({ message: "Bad Gateway - User Service" });
+    },
+  })(req, res, next);
+});
 
 // ==========================
 // Health & Monitoring Routes (always available at /api/health and /api/metrics)
-app.use('/api/health', healthRoutes);
-app.use('/api/metrics', metricsRoutes);
+app.use("/api/health", healthRoutes);
+app.use("/api/metrics", metricsRoutes);
 
 // API Routes with Versioning
 // app.use("/api", require("./src/routes"));
@@ -164,19 +180,21 @@ app.use("*", (req, res) => {
 // ==========================
 const shutdown = () => {
   logger.info("Shutdown signal received. Cleaning up...");
-  
+
   // Close MongoDB connection
   mongoose.connection.close(() => {
     logger.info("MongoDB connection closed.");
-    
+
     // Close Redis connection
-    closeRedisConnection().then(() => {
-      logger.info("All connections closed, exiting process.");
-      process.exit(0);
-    }).catch((err) => {
-      logger.error("Error closing Redis connection:", err);
-      process.exit(1);
-    });
+    closeRedisConnection()
+      .then(() => {
+        logger.info("All connections closed, exiting process.");
+        process.exit(0);
+      })
+      .catch((err) => {
+        logger.error("Error closing Redis connection:", err);
+        process.exit(1);
+      });
   });
 };
 
@@ -188,7 +206,9 @@ process.on("SIGINT", shutdown);
 // ==========================
 app.listen(PORT, () => {
   logger.info(`🚀 API Gateway running on port ${PORT}`);
-  logger.info(`🌐 Environment: ${process.env.NODE_ENV || config.nodeEnv || "development"}`);
+  logger.info(
+    `🌐 Environment: ${process.env.NODE_ENV || config.nodeEnv || "development"}`
+  );
   if (DEBUG) logger.info("🔍 Proxy debug mode is ON");
 });
 

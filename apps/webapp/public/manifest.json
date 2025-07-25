@@ -1,0 +1,22 @@
+{
+  "name": "StarkPulse",
+  "short_name": "StarkPulse",
+  "description": "Decentralized Crypto News & Portfolio Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#db74cf",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

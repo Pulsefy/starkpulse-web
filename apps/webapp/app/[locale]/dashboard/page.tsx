@@ -10,10 +10,15 @@ import { PortfolioSummary } from "@/components/portfolio-summary";
 import { EarningsDashboard } from "@/components/earnings-dashboard";
 import { mockNewsData } from "@/lib/mock-data";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUIStore, useNewsStore, useMarketStore, usePortfolioStore } from "@/store";
+import {
+  useUIStore,
+  useNewsStore,
+  useMarketStore,
+  usePortfolioStore,
+} from "@/store";
 
 export default function Dashboard() {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation("dashboard");
 
   // Keep original state structure but sync with stores
   const [activeView, setActiveView] = useState("home");
@@ -23,7 +28,12 @@ export default function Dashboard() {
 
   // Get data from Zustand stores
   const { currentPage, setCurrentPage } = useUIStore();
-  const { articles, isLoading: storeLoadingNews, error: newsError, fetchNews } = useNewsStore();
+  const {
+    articles,
+    isLoading: storeLoadingNews,
+    error: newsError,
+    fetchNews,
+  } = useNewsStore();
   const { cryptoAssets, fetchMarketData } = useMarketStore();
   const { updatePortfolioData } = usePortfolioStore();
 
@@ -43,14 +53,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (articles.length > 0) {
-      const convertedNews = articles.map(article => ({
+      const convertedNews = articles.map((article) => ({
         id: parseInt(article.id),
         title: article.title,
         excerpt: article.description,
-        category: article.category[0] || 'General',
+        category: article.category[0] || "General",
         author: article.author,
         date: new Date(article.publishedAt).toLocaleDateString(),
-        imageUrl: article.imageUrl || '',
+        imageUrl: article.imageUrl || "",
       }));
       setNewsData(convertedNews);
     }
@@ -118,7 +128,7 @@ export default function Dashboard() {
           <CryptoTable formatNumberAction={formatNumber} />
         ) : activeView === "portfolio" ? (
           <div className="space-y-6">
-            <h1 className="text-2xl font-bold mb-4">{t('portfolio')}</h1>
+            <h1 className="text-2xl font-bold mb-4">{t("portfolio")}</h1>
             <PortfolioSummary />
             {/* You can add more portfolio-related components here */}
           </div>
@@ -126,8 +136,8 @@ export default function Dashboard() {
           <EarningsDashboard />
         ) : (
           <div>
-            <h1 className="text-2xl font-bold mb-4">{t('dashboard_home')}</h1>
-            <p>{t('welcome_message')}</p>
+            <h1 className="text-2xl font-bold mb-4">{t("dashboard_home")}</h1>
+            <p>{t("welcome_message")}</p>
           </div>
         )}
       </div>

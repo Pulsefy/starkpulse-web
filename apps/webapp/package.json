@@ -55,11 +55,10 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "8.49.0",
-    "i18next": "^25.3.2",
     "gsap": "^3.13.0",
     "lucide-react": "^0.525.0",
     "next": "^14.0.0",
-    "next-i18next": "^15.4.2",
+    "next-pwa": "^5.6.0",
     "next-themes": "^0.3.0",
     "postcss": "8.4.30",
     "react": "18.2.0",
@@ -83,6 +82,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.0.0",
+    "@rollup/plugin-babel": "^6.0.4",
     "eslint-config-next": "^14.0.0"
   }
 }

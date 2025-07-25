@@ -17,12 +17,6 @@ import {
   Globe,
 } from "lucide-react";
 import WalletButton from "./wallet-button";
-// Remove the useWallet import since it's causing issues
-// import { useWallet } from "@/hooks/use-wallet";
-// Change this line:
-// import { WalletConnectModal } from "./wallet-connect-modal";
-
-// To this:
 import { WalletConnectModal } from "./wallet-connect-model";
 
 export function Navbar() {
@@ -33,7 +27,7 @@ export function Navbar() {
   const isDashboard = pathname?.startsWith("/dashboard");
   const { t, changeLanguage, currentLocale } = useTranslation();
 
-  // Sample notifications data
+  // Sample notifications data (restored from original)
   const notifications = [
     {
       id: 1,
@@ -205,17 +199,15 @@ export function Navbar() {
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer ${
-                                notification.read ? "opacity-70" : ""
-                              }`}
+                              className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer ${notification.read ? "opacity-70" : ""
+                                }`}
                             >
                               <div className="flex items-start gap-3">
                                 <div
-                                  className={`w-2 h-2 rounded-full mt-2 ${
-                                    notification.read
+                                  className={`w-2 h-2 rounded-full mt-2 ${notification.read
                                       ? "bg-gray-500"
                                       : "bg-[#db74cf]"
-                                  }`}
+                                    }`}
                                 ></div>
                                 <div>
                                   <p className="text-sm font-medium text-white">

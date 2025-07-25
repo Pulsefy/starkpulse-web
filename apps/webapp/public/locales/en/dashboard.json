@@ -1,0 +1,27 @@
+{
+  "portfolio": "Portfolio",
+  "dashboard_home": "Dashboard Home",
+  "welcome_message": "Welcome to StarkPulse Dashboard",
+  "sidebar": {
+    "home": "Home",
+    "news": "News",
+    "market": "Market",
+    "portfolio": "Portfolio",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "earnings": {
+    "total_earnings": "Total Earnings",
+    "earnings_change": "Earnings Change",
+    "pending_rewards": "Pending Rewards",
+    "staking_rewards": "Staking Rewards",
+    "referral_rewards": "Referral Rewards",
+    "earnings_chart": "Earnings Chart",
+    "recent_activity": "Recent Activity",
+    "no_activity": "No recent activity",
+    "view_all": "View All",
+    "percentage_of_total": "68.2% of total earnings",
+    "from_staking": "From STRK token staking",
+    "from_referrals": "From invited users"
+  }
+} 

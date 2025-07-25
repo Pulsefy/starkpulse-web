@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Home,
   LineChart,
@@ -28,24 +29,25 @@ interface SidebarProps {
 
 export function Sidebar({ activeItem, onNavItemClickAction }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useTranslation('dashboard');
 
   const navItems = [
     {
-      name: "Home",
+      name: t('sidebar.home'),
       href: "#",
       icon: Home,
       id: "home",
       onClick: () => onNavItemClickAction("home"),
     },
     {
-      name: "Market",
+      name: t('sidebar.market'),
       href: "#",
       icon: TrendingUp,
       id: "market",
       onClick: () => onNavItemClickAction("market"),
     },
     {
-      name: "Portfolio",
+      name: t('sidebar.portfolio'),
       href: "#",
       icon: PieChart,
       id: "portfolio",
@@ -66,13 +68,13 @@ export function Sidebar({ activeItem, onNavItemClickAction }: SidebarProps) {
       onClick: () => onNavItemClickAction("staking"),
     },
     {
-      name: "News",
+      name: t('sidebar.news'),
       href: "#",
       icon: Rss,
       id: "news",
       onClick: () => onNavItemClickAction("news"),
     },
-    { name: "Settings", href: "/settings", icon: Settings, id: "settings" },
+    { name: t('sidebar.settings'), href: "/settings", icon: Settings, id: "settings" },
   ];
 
   return (

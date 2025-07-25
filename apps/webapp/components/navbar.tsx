@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Menu,
   X,
@@ -13,6 +14,7 @@ import {
   UserCircle,
   Bell,
   Search,
+  Globe,
 } from "lucide-react";
 import WalletButton from "./wallet-button";
 import { WalletConnectModal } from "./wallet-connect-model";
@@ -23,6 +25,7 @@ export function Navbar() {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
+  const { t, changeLanguage, currentLocale } = useTranslation();
 
   // Sample notifications data (restored from original)
   const notifications = [
@@ -129,6 +132,31 @@ export function Navbar() {
 
           {/* Right-aligned elements - Modified to ensure proper spacing */}
           <div className="flex items-center gap-4 ml-auto">
+            {/* Language Switcher */}
+            <div className="hidden md:flex items-center gap-1">
+              <Globe className="w-4 h-4 text-gray-400" />
+              <button
+                onClick={() => changeLanguage('en')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  currentLocale === 'en' 
+                    ? 'bg-[#db74cf] text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => changeLanguage('fr')}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  currentLocale === 'fr' 
+                    ? 'bg-[#db74cf] text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                FR
+              </button>
+            </div>
+
             {/* Dashboard-specific elements moved here */}
             {isDashboard && (
               <>
@@ -215,7 +243,7 @@ export function Navbar() {
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white hover:text-[#db74cf] transition-colors"
               >
                 <UserCircle className="w-4 h-4" />
-                <span>Sign In</span>
+                <span>{t('buttons.sign_in')}</span>
               </Link>
             </div>
 
@@ -253,6 +281,38 @@ export function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden bg-black/95 border-t border-primary/20 backdrop-blur-xl">
           <div className="container mx-auto px-4 py-4 space-y-2">
+            {/* Language Switcher in Mobile Menu */}
+            <div className="flex items-center gap-2 p-3 border-b border-white/10">
+              <Globe className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Language:</span>
+              <button
+                onClick={() => {
+                  changeLanguage('en');
+                  setIsMenuOpen(false);
+                }}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  currentLocale === 'en' 
+                    ? 'bg-[#db74cf] text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => {
+                  changeLanguage('fr');
+                  setIsMenuOpen(false);
+                }}
+                className={`px-2 py-1 text-xs rounded transition-colors ${
+                  currentLocale === 'fr' 
+                    ? 'bg-[#db74cf] text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                FR
+              </button>
+            </div>
+
             {/* Dashboard-specific mobile search */}
             {isDashboard && (
               <>
@@ -318,7 +378,7 @@ export function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               <UserCircle className="w-5 h-5 text-primary" />
-              <span>Sign In</span>
+              <span>{t('buttons.sign_in')}</span>
               <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#db74cf] transform scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
             </Link>
 

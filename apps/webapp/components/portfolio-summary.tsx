@@ -16,7 +16,8 @@ import {
 } from "chart.js";
 import { Line, Doughnut } from "react-chartjs-2";
 import { PlusIcon } from "lucide-react";
-import { PortfolioCoinsTable } from "./portfolio-coins-table";
+import { useTranslation } from "@/hooks/useTranslation";
+/* import { PortfolioCoinsTable } from "./portfolio-coins-table"; */
 
 // Register ChartJS components
 ChartJS.register(
@@ -33,6 +34,8 @@ ChartJS.register(
 );
 
 export function PortfolioSummary() {
+	const { t } = useTranslation('portfolio');
+	
 	// Mock data for the portfolio
 	const portfolioValue = 82.9;
 	const portfolioChange = 4.41;
@@ -47,7 +50,7 @@ export function PortfolioSummary() {
 		datasets: [
 			{
 				fill: true,
-				label: "Portfolio Value",
+				label: t('chart_labels.portfolio_value'),
 				data: [75, 78, 82, 85, 83, 82],
 				borderColor: "#4ade80",
 				backgroundColor: "rgba(74, 222, 128, 0.1)",
@@ -286,7 +289,7 @@ export function PortfolioSummary() {
 			</div>
 
 			{/* Portfolio Coins Table Component */}
-			<PortfolioCoinsTable />
+			{/* <PortfolioCoinsTable /> */}
 		</div>
 	);
 }

@@ -3,6 +3,7 @@
 import { Clock, User } from "lucide-react";
 import Image from "next/image";
 import { NewsCarousel } from "@/components/news-carousel";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface NewsData {
   id: number;
@@ -27,6 +28,8 @@ export function NewsSection({
   error,
   showAsGrid = false,
 }: NewsSectionProps) {
+  const { t } = useTranslation();
+  
   // Add console log to debug the data
   console.log("News Data:", newsData);
 
@@ -37,7 +40,7 @@ export function NewsSection({
         style={{ opacity: 1, filter: "none" }}
       >
         <span className="w-2 h-6 bg-blue-500 rounded-sm inline-block"></span>
-        Latest News
+        {t('news.latest_news')}
       </h2>
 
       {isLoading ? (
@@ -63,7 +66,7 @@ export function NewsSection({
             className="block mx-auto mt-4 px-4 py-2 bg-primary/20 text-white rounded-lg hover:bg-primary/30 transition-colors"
             onClick={() => window.location.reload()}
           >
-            Retry
+            {t('buttons.retry')}
           </button>
         </div>
       ) : showAsGrid ? (
@@ -88,19 +91,19 @@ export function NewsSection({
                 </div>
                 <div className="p-4">
                   <h3 className="text-lg font-bold text-white mb-2">
-                    {news.title || "Untitled"}
+                    {news.title || t('news.untitled')}
                   </h3>
                   <p className="text-white/80 text-sm mb-3">
-                    {news.excerpt || "No description available"}
+                    {news.excerpt || t('news.no_description')}
                   </p>
                   <div className="flex justify-between items-center text-xs text-white/60">
                     <div className="flex items-center gap-1">
                       <User className="w-3 h-3" />
-                      {news.author || "Unknown"}
+                      {news.author || t('news.unknown_author')}
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {news.date || "No date"}
+                      {news.date || t('news.no_date')}
                     </div>
                   </div>
                 </div>
@@ -108,7 +111,7 @@ export function NewsSection({
             ))
           ) : (
             <div className="col-span-3 text-center py-8 text-white">
-              No news articles available
+              {t('news.no_news_available')}
             </div>
           )}
         </div>

@@ -5,9 +5,12 @@ import { mockCryptoData, mockNewsData } from "@/lib/mock-data";
 import type { CryptoData, NewsData } from "@/lib/mock-data";
 import { CryptoTable } from "@/components/crypto-table";
 import { NewsSection } from "@/components/news-section";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useMarketStore, useNewsStore } from "@/store";
 
 export default function NewsPage() {
+  const { t } = useTranslation('news');
+
   // Keep original state structure but populate from stores
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   const [newsData, setNewsData] = useState<NewsData[]>([]);
@@ -55,15 +58,14 @@ export default function NewsPage() {
         setIsLoadingCrypto(false);
       } catch (err) {
         console.error("Error fetching crypto data:", err);
-        setError("Failed to load cryptocurrency data");
+        setError(t('loading_error'));
         setIsLoadingCrypto(false);
       }
     };
 
     fetchCryptoData();
-  }, [cryptoAssets, fetchMarketData]);
+  }, [cryptoAssets, fetchMarketData, t]);
 
-  // Fetch news data from store
   useEffect(() => {
     const fetchNewsData = async () => {
       setIsLoadingNews(true);
@@ -85,13 +87,13 @@ export default function NewsPage() {
         setIsLoadingNews(false);
       } catch (err) {
         console.error("Error fetching news data:", err);
-        setError("Failed to load news data");
+        setError(t('news_loading_error'));
         setIsLoadingNews(false);
       }
     };
 
     fetchNewsData();
-  }, [articles, fetchNews]);
+  }, [articles, fetchNews, t]);
 
   // Update loading states from stores
   useEffect(() => {
@@ -121,7 +123,7 @@ export default function NewsPage() {
                   className="text-2xl font-bold font-poppins text-white relative z-10 isolation-isolate"
                   style={{ opacity: 1, filter: "none" }}
                 >
-                  Cryptocurrency Prices by Market Cap
+                  {t('page_title')}
                 </h2>
               </div>
               <div className="flex justify-center items-center h-64">
@@ -145,7 +147,7 @@ export default function NewsPage() {
                   className="block mx-auto mt-4 px-4 py-2 bg-primary/20 text-white rounded-lg hover:bg-primary/30 transition-colors"
                   onClick={() => window.location.reload()}
                 >
-                  Retry
+                  {t('retry_button')}
                 </button>
               </div>
             </div>

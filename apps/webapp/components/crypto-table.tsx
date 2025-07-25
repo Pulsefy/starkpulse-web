@@ -3,6 +3,7 @@
 import { TrendingUp, TrendingDown, Star } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CryptoData {
   id: number;
@@ -292,6 +293,7 @@ const mockCryptoData: CryptoData[] = [
 ];
 
 export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
+  const { t } = useTranslation('news');
   const [cryptoData] = useState<CryptoData[]>(mockCryptoData);
   const [isLoading] = useState<boolean>(false);
   const [error] = useState<string | null>(null);
@@ -338,7 +340,7 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold font-poppins text-white flex items-center gap-2">
           <span className="w-2 h-6 bg-blue-500 rounded-sm"></span>
-          Cryptocurrency Market Cap
+          {t('page_title')}
           {/* <span className="text-sm text-gray-400 ml-2 font-normal">
             Top {cryptoData.length}
           </span> */}
@@ -361,12 +363,12 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
       ) : error ? (
         <div className="text-center text-red-500 py-8">
           {error}
-          <button
-            className="block mx-auto mt-4 px-4 py-2 bg-primary/20 text-white rounded-lg hover:bg-primary/30 transition-colors"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </button>
+                      <button
+              className="block mx-auto mt-4 px-4 py-2 bg-primary/20 text-white rounded-lg hover:bg-primary/30 transition-colors"
+              onClick={() => window.location.reload()}
+            >
+              {t('retry_button')}
+            </button>
         </div>
       ) : (
         <div
@@ -382,15 +384,15 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
             <thead className="sticky top-0 bg-black/90 backdrop-blur-md z-10">
               <tr className="border-b border-white/10 text-left">
                 <th className="pb-3 pl-2 w-10"></th>
-                <th className="pb-3 pl-2 w-10">#</th>
-                <th className="pb-3">Coin</th>
-                <th className="pb-3 text-right">Price</th>
-                <th className="pb-3 text-right">1h</th>
-                <th className="pb-3 text-right">24h</th>
-                <th className="pb-3 text-right">7d</th>
-                <th className="pb-3 text-right">24h Volume</th>
-                <th className="pb-3 text-right">Market Cap</th>
-                <th className="pb-3 text-right pr-4">Last 7 Days</th>
+                <th className="pb-3 pl-2 w-10">{t('rank')}</th>
+                <th className="pb-3">{t('name')}</th>
+                <th className="pb-3 text-right">{t('price')}</th>
+                <th className="pb-3 text-right">{t('table_headers.1h')}</th>
+                <th className="pb-3 text-right">{t('table_headers.24h')}</th>
+                <th className="pb-3 text-right">{t('table_headers.7d')}</th>
+                <th className="pb-3 text-right">{t('volume')}</th>
+                <th className="pb-3 text-right">{t('market_cap')}</th>
+                <th className="pb-3 text-right pr-4">{t('table_headers.last_7_days')}</th>
               </tr>
             </thead>
             <tbody>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense, memo } from "react";
 import dynamic from "next/dynamic";
 import gsap from "gsap";
 import Link from "next/link";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Dynamically import icons
 const Wallet = dynamic(() => import("lucide-react").then((mod) => mod.Wallet), {
@@ -55,18 +56,21 @@ const FormDescription = memo(({ description }: { description: string }) => (
 ));
 FormDescription.displayName = "FormDescription";
 
-const TermsFooter = memo(() => (
-  <div className="text-xs text-center text-gray-500 form-element">
-    By connecting, you agree to our{" "}
-    <Link href="/terms" className="text-blue-500 hover:text-[#db74cf]">
-      Terms of Service
-    </Link>{" "}
-    and{" "}
-    <Link href="/privacy" className="text-blue-500 hover:text-[#db74cf]">
-      Privacy Policy
-    </Link>
-  </div>
-));
+const TermsFooter = memo(() => {
+  const { t } = useTranslation('auth');
+  return (
+    <div className="text-xs text-center text-gray-500 form-element">
+      {t('terms.agreement')}{" "}
+      <Link href="/terms" className="text-blue-500 hover:text-[#db74cf]">
+        {t('terms.terms_of_service')}
+      </Link>{" "}
+      {t('terms.and')}{" "}
+      <Link href="/privacy" className="text-blue-500 hover:text-[#db74cf]">
+        {t('terms.privacy_policy')}
+      </Link>
+    </div>
+  );
+});
 TermsFooter.displayName = "TermsFooter";
 
 // Blockchain node component
@@ -89,6 +93,7 @@ const BlockchainNode = memo(
 BlockchainNode.displayName = "BlockchainNode";
 
 function LoginFormComponent() {
+  const { t } = useTranslation('auth');
   const [formMode, setFormMode] = useState<"signin" | "signup" | "reset">(
     "signin"
   );
@@ -177,22 +182,22 @@ function LoginFormComponent() {
   const getFormTitle = () => {
     switch (formMode) {
       case "signup":
-        return "Join our Community!";
+        return t('form_titles.signup');
       case "reset":
-        return "Reset Passkey";
+        return t('form_titles.reset');
       default:
-        return "Sign In";
+        return t('form_titles.signin');
     }
   };
 
   const getFormDescription = () => {
     switch (formMode) {
       case "signup":
-        return "";
+        return t('form_descriptions.signup');
       case "reset":
-        return "Enter your email to receive reset instructions";
+        return t('form_descriptions.reset');
       default:
-        return "Access your StarkPulse dashboard";
+        return t('form_descriptions.signin');
     }
   };
 

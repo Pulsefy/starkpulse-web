@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Navbar } from "@/components/navbar";
 import { StarsAnimation } from "@/components/stars-animation";
@@ -9,20 +9,87 @@ import { CryptoTable } from "@/components/crypto-table";
 import { PortfolioSummary } from "@/components/portfolio-summary";
 import { EarningsDashboard } from "@/components/earnings-dashboard";
 import { mockNewsData } from "@/lib/mock-data";
+import { useTranslation } from "@/hooks/useTranslation";
+import {
+  useUIStore,
+  useNewsStore,
+  useMarketStore,
+  usePortfolioStore,
+} from "@/store";
 
 export default function Dashboard() {
+  const { t } = useTranslation("dashboard");
+
+  // Keep original state structure but sync with stores
   const [activeView, setActiveView] = useState("home");
-  const [newsData] = useState(mockNewsData);
+  const [newsData, setNewsData] = useState(mockNewsData);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle sidebar navigation
+  // Get data from Zustand stores
+  const { currentPage, setCurrentPage } = useUIStore();
+  const {
+    articles,
+    isLoading: storeLoadingNews,
+    error: newsError,
+    fetchNews,
+  } = useNewsStore();
+  const { cryptoAssets, fetchMarketData } = useMarketStore();
+  const { updatePortfolioData } = usePortfolioStore();
+
+  // Sync local state with store
+  useEffect(() => {
+    if (currentPage !== activeView) {
+      setActiveView(currentPage);
+    }
+  }, [currentPage, activeView]);
+
+  useEffect(() => {
+    setIsLoadingNews(storeLoadingNews);
+    if (newsError) {
+      setError(newsError);
+    }
+  }, [storeLoadingNews, newsError]);
+
+  useEffect(() => {
+    if (articles.length > 0) {
+      const convertedNews = articles.map((article) => ({
+        id: parseInt(article.id),
+        title: article.title,
+        excerpt: article.description,
+        category: article.category[0] || "General",
+        author: article.author,
+        date: new Date(article.publishedAt).toLocaleDateString(),
+        imageUrl: article.imageUrl || "",
+      }));
+      setNewsData(convertedNews);
+    }
+  }, [articles]);
+
+  // Handle sidebar navigation (keep original function but sync with store)
   const handleNavigation = (navItem: string) => {
     console.log("Navigation changed to:", navItem);
     setActiveView(navItem);
-    // Debug statement
+    setCurrentPage(navItem);
     console.log("Active view is now:", navItem);
   };
+
+  // Fetch data from stores on component load
+  useEffect(() => {
+    if (articles.length === 0) {
+      fetchNews();
+    }
+  }, [articles.length, fetchNews]);
+
+  useEffect(() => {
+    if (cryptoAssets.length === 0) {
+      fetchMarketData();
+    }
+  }, [cryptoAssets.length, fetchMarketData]);
+
+  useEffect(() => {
+    updatePortfolioData();
+  }, [updatePortfolioData]);
 
   // Format number for crypto table
   const formatNumber = (num: number): string => {
@@ -44,7 +111,7 @@ export default function Dashboard() {
       </div>
 
       <Sidebar
-        activeItem={activeView}
+        activeItem={currentPage}
         onNavItemClickAction={handleNavigation}
       />
       <Navbar />
@@ -61,7 +128,7 @@ export default function Dashboard() {
           <CryptoTable formatNumberAction={formatNumber} />
         ) : activeView === "portfolio" ? (
           <div className="space-y-6">
-            <h1 className="text-2xl font-bold mb-4">Portfolio</h1>
+            <h1 className="text-2xl font-bold mb-4">{t("portfolio")}</h1>
             <PortfolioSummary />
             {/* You can add more portfolio-related components here */}
           </div>
@@ -69,8 +136,8 @@ export default function Dashboard() {
           <EarningsDashboard />
         ) : (
           <div>
-            <h1 className="text-2xl font-bold mb-4">Dashboard Home</h1>
-            <p>Welcome to StarkPulse Dashboard</p>
+            <h1 className="text-2xl font-bold mb-4">{t("dashboard_home")}</h1>
+            <p>{t("welcome_message")}</p>
           </div>
         )}
       </div>

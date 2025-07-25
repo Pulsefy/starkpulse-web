@@ -1,0 +1,28 @@
+{
+  "portfolio": "Portfolio",
+  "portfolio_value": "Portfolio Value",
+  "total_loss": "Total Loss",
+  "top_gainer": "Top Gainer",
+  "add_asset": "Add Asset",
+  "performance": "Performance",
+  "assets": "Assets",
+  "allocation": "Allocation",
+  "chart_labels": {
+    "portfolio_value": "Portfolio Value"
+  },
+  "months": {
+    "jan": "Jan",
+    "feb": "Feb",
+    "mar": "Mar",
+    "apr": "Apr",
+    "may": "May",
+    "jun": "Jun",
+    "jul": "Jul",
+    "aug": "Aug",
+    "sep": "Sep"
+  },
+  "data": {
+    "energy_web": "Energy Web",
+    "ewt": "EWT"
+  }
+} 

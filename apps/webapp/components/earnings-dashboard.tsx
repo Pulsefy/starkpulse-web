@@ -10,6 +10,7 @@ import {
   Clock,
   Award,
 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,6 +36,8 @@ ChartJS.register(
 );
 
 export function EarningsDashboard() {
+  const { t } = useTranslation('dashboard');
+  
   // Mock data for earnings
   const totalEarnings = 1284.56;
   const earningsChange = 124.35;
@@ -252,7 +255,7 @@ export function EarningsDashboard() {
           <div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
             <div className="flex flex-col items-center justify-center h-full p-4">
               <div className="mb-2"></div>
-              <p className="text-sm text-gray-400 mb-1">Total Earnings</p>
+                              <p className="text-sm text-gray-400 mb-1">{t('earnings.total_earnings')}</p>
               <p className="text-3xl font-bold text-[#db74cf]">
                 {totalEarnings.toFixed(2)} STRK
               </p>
@@ -270,7 +273,7 @@ export function EarningsDashboard() {
           <div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
             <div className="flex flex-col items-center justify-center h-full p-4">
               <div className="mb-2"></div>
-              <p className="text-sm text-gray-400 mb-1">Pending Rewards</p>
+                              <p className="text-sm text-gray-400 mb-1">{t('earnings.pending_rewards')}</p>
               <p className="text-3xl font-bold text-blue-400">
                 {pendingRewards.toFixed(2)} STRK
               </p>
@@ -288,13 +291,13 @@ export function EarningsDashboard() {
           <div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
             <div className="flex flex-col items-center justify-center h-full p-4">
               <div className="mb-2"></div>
-              <p className="text-sm text-gray-400 mb-1">Staking Rewards</p>
+                              <p className="text-sm text-gray-400 mb-1">{t('earnings.staking_rewards')}</p>
               <p className="text-3xl font-bold text-green-400">
                 {stakingRewards.toFixed(2)} STRK
               </p>
               <p className="text-sm text-green-400 flex items-center">
                 <TrendingUp className="w-3 h-3 mr-1" />
-                68.2% of total earnings
+                {t('earnings.percentage_of_total')}
               </p>
               <span className="absolute left-1/2 bottom-3 transform -translate-x-1/2 text-[6px] uppercase text-gray-400">
                 staking performance
@@ -314,10 +317,10 @@ export function EarningsDashboard() {
                       <Award className="w-4 h-4 text-[#db74cf]" />
                     </div>
                     <div>
-                      <p className="font-medium">Staking Rewards</p>
-                      <p className="text-xs text-gray-400">
-                        From STRK token staking
-                      </p>
+                      <p className="font-medium">{t('earnings.staking_rewards')}</p>
+                                              <p className="text-xs text-gray-400">
+                          {t('earnings.from_staking')}
+                        </p>
                     </div>
                   </div>
                   <p className="font-bold">${stakingRewards.toFixed(2)} STRK</p>
@@ -329,10 +332,10 @@ export function EarningsDashboard() {
                       <TrendingUp className="w-4 h-4 text-blue-500" />
                     </div>
                     <div>
-                      <p className="font-medium">Referral Rewards</p>
-                      <p className="text-xs text-gray-400">
-                        From invited users
-                      </p>
+                      <p className="font-medium">{t('earnings.referral_rewards')}</p>
+                                              <p className="text-xs text-gray-400">
+                          {t('earnings.from_referrals')}
+                        </p>
                     </div>
                   </div>
                   <p className="font-bold">

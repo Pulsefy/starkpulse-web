@@ -1,7 +1,5 @@
-"use client";
+import { redirect } from 'next/navigation';
 
-import { HomeView } from "./home/home-view";
-
-export default function Home() {
-  return <HomeView />;
-}
+export default function RootPage() {
+  redirect('/en');
+} 

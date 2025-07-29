@@ -10,6 +10,10 @@ import {
 } from "next/font/google";
 import { StarknetProvider } from "@/providers/starknet-provider";
 import InstallPWAButton from "@/components/InstallPWAButton";
+import { ErrorBoundary } from "@/components/error-boundary";
+
+import { ErrorMonitor } from "@/components/error-monitor";
+import { ErrorTest } from "@/components/error-test";
 
 // Font definitions
 const inter = Inter({
@@ -77,8 +81,17 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable}`}
       >
-        <StarknetProvider>{children}</StarknetProvider>
-        <InstallPWAButton />
+        <ErrorBoundary
+          errorMessage="Application Error"
+          showRetry={true}
+          showReport={true}
+        >
+          <StarknetProvider>{children}</StarknetProvider>
+          <InstallPWAButton />
+
+          <ErrorMonitor />
+          <ErrorTest />
+        </ErrorBoundary>
       </body>
     </html>
   );

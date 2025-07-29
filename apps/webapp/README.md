@@ -14,6 +14,7 @@ The StarkPulse frontend delivers a seamless user experience with a futuristic UI
 - **Portfolio Visualization** 📊: Interactive charts and metrics for tracking crypto assets
 - **Transaction History** 🔍: Comprehensive view of on-chain activities
 - **Community Engagement Tools** 👥: Rating, commenting, and content contribution features
+- **Comprehensive Error Handling** 🚨: Robust error boundaries, recovery mechanisms, and user-friendly error messages
 
 ## Tech Stack
 
@@ -63,6 +64,7 @@ npm run dev
 starkpulse/
 ├── app/             # Next.js app router pages
 ├── components/      # Reusable UI components
+├── docs/            # Documentation (including error handling)
 ├── hooks/           # Custom React hooks
 ├── lib/             # Utility functions and constants
 ├── public/          # Static assets
@@ -83,6 +85,40 @@ starkpulse/
 ## Connecting to Backend
 
 The frontend connects to the StarkPulse backend API for data fetching and blockchain interactions. See the backend repository for API documentation and setup instructions.
+
+## Error Handling System
+
+This application includes a comprehensive error handling system that provides:
+
+- **Error Boundaries**: React error boundaries for graceful error recovery
+- **Error Monitoring**: Real-time error tracking and reporting
+- **User-Friendly Messages**: Clear error messages with recovery options
+- **Retry Mechanisms**: Automatic and manual retry for failed operations
+- **Error Analytics**: Error statistics and monitoring tools
+
+### Error Handling Features
+
+- ✅ Global error boundary for the entire application
+- ✅ Page-level error boundaries for route-specific errors
+- ✅ Component-level error boundaries for critical components
+- ✅ Fallback UI components for different error scenarios
+- ✅ Error logging and reporting system
+- ✅ User-friendly error messages and recovery options
+- ✅ Retry mechanisms for failed operations
+- ✅ Network errors and API failures handling
+- ✅ Global error handlers for unhandled promises
+- ✅ Error tracking for wallet connection issues
+- ✅ Error handling for blockchain transaction failures
+- ✅ Error state management in Zustand stores
+- ✅ Error page components (404, 500)
+- ✅ Error toast notifications
+- ✅ Loading error states for data fetching
+- ✅ Error reporting service integration (optional)
+- ✅ Error analytics and tracking
+- ✅ Error boundary telemetry
+- ✅ Error logs for development debugging
+
+For detailed documentation, see [Error Handling Documentation](./docs/ERROR_HANDLING.md).
 
 ## Contributing
 

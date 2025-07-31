@@ -1,4 +1,12 @@
 const authService = require("../services/authService");
+const User = require("../models/User");
+const {
+  generateTokens,
+  verifyToken,
+  revokeToken,
+} = require("../auth/utils/jwt");
+const { sendVerificationEmail } = require("../services/email");
+const audit = require("../services/audit");
 
 class AuthController {
   // ==========================
@@ -266,7 +274,7 @@ class AuthController {
       const currentRefreshToken = req.body.refreshToken;
       const sessions = await authService.getUserSessions(
         req.user._id,
-        currentRefreshToken
+        currentRefreshToken,
       );
 
       res.json({
@@ -315,3 +323,98 @@ class AuthController {
 }
 
 module.exports = new AuthController();
+
+exports.register = async (req, res) => {
+  try {
+    const { email, password, walletAddress } = req.body;
+
+    let user;
+    if (email) {
+      user = new User({
+        email,
+        password: await bcrypt.hash(password, 10),
+        authMethod: "email",
+      });
+    } else if (walletAddress) {
+      user = new User({
+        walletAddress,
+        authMethod: "wallet",
+      });
+    }
+
+    await user.save();
+
+    if (email) {
+      await sendVerificationEmail(user);
+    }
+
+    const tokens = await generateTokens(user);
+
+    audit.log({
+      action: "user_registered",
+      userId: user.id,
+      metadata: { authMethod: user.authMethod },
+    });
+
+    res.json({ ...tokens, user: user.toJSON() });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.login = async (req, res) => {
+  const tokens = await generateTokens(req.user);
+
+  audit.log({
+    action: "user_logged_in",
+    userId: req.user.id,
+    metadata: { authMethod: req.user.authMethod },
+  });
+
+  res.json({ ...tokens, user: req.user.toJSON() });
+};
+
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const decoded = verifyToken(refreshToken, true);
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const tokens = await generateTokens(user);
+    res.json(tokens);
+  } catch (error) {
+    res.status(401).json({ message: "Invalid refresh token" });
+  }
+};
+
+exports.logout = async (req, res) => {
+  await revokeToken(req.user.id);
+
+  audit.log({
+    action: "user_logged_out",
+    userId: req.user.id,
+  });
+
+  res.json({ message: "Logged out successfully" });
+};
+
+exports.authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = verifyToken(token);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
+};

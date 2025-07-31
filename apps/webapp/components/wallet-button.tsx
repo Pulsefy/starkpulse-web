@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Wallet } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const WalletButton = ({
   onClick,
@@ -10,6 +11,7 @@ const WalletButton = ({
   onClick?: () => void;
   children?: React.ReactNode;
 }) => {
+  const { t } = useTranslation();
   // Add client-side only rendering
   const [isMounted, setIsMounted] = useState(false);
 
@@ -27,7 +29,7 @@ const WalletButton = ({
                   bg-[#161a25] border-4 border-double border-[#db74cf]/30"
         >
           <span className="text-xs tracking-[3px] text-white">
-            {children || "CONNECT"}
+            {children || t('buttons.connect')}
           </span>
         </button>
       </div>
@@ -64,7 +66,7 @@ const WalletButton = ({
         <div className="flex items-center justify-center z-20 relative">
           <Wallet className="w-4 h-4 text-white mr-2" />
           <strong className="text-xs tracking-[3px] text-white text-shadow-sm shadow-white">
-            {children || "CONNECT"}
+            {children || t('buttons.connect')}
           </strong>
         </div>
 

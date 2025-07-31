@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import { initFooterAnimations } from "@/lib/footer-animations";
 import { FooterLinksGroup } from "@/components/ui/footer-links";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function Footer() {
+  const { t } = useTranslation();
   const footerRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -316,7 +318,7 @@ export function Footer() {
         {/* Social icons and copyright section */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-primary/5">
           <p className="text-foreground/60 text-xs mb-4 md:mb-0 relative z-20">
-            © {new Date().getFullYear()} StarkPulse. All rights reserved.
+                            {t('footer.copyright').replace('2024', new Date().getFullYear().toString())}
           </p>
 
           <div className="flex space-x-3 sm:space-x-4">

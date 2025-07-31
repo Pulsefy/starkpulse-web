@@ -5,6 +5,7 @@ import Image from "next/image";
 import { X, ExternalLink, AlertCircle } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useConnect, useAccount } from "@starknet-react/core";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Import the WalletButton component
 import WalletButton from "./wallet-button";
@@ -20,6 +21,7 @@ export function WalletConnectModal({
   onCloseAction,
   onConnectSuccess,
 }: WalletConnectModalProps) {
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function WalletConnectModal({
       );
 
       if (!argentConnector) {
-        setError("Argent X wallet not found. Please install it first.");
+        setError(t('wallet.argent_not_found'));
         setConnecting(false);
         return;
       }
@@ -62,7 +64,7 @@ export function WalletConnectModal({
       setConnecting(false);
     } catch (err: any) {
       console.error("Error connecting wallet:", err);
-      setError(err.message || "Failed to connect. Please try again.");
+      setError(err.message || t('wallet.connect_failed'));
       setConnecting(false);
     }
   };
@@ -93,9 +95,9 @@ export function WalletConnectModal({
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-white">Connect Wallet</h2>
+          <h2 className="text-xl font-bold text-white">{t('wallet.connect_wallet')}</h2>
           <p className="text-sm text-white/60 mt-1">
-            Connect your Starknet wallet to continue
+            {t('wallet.connect_description')}
           </p>
         </div>
 
@@ -115,8 +117,8 @@ export function WalletConnectModal({
               />
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-white">Argent X</h3>
-              <p className="text-xs text-white/60">The Starknet wallet</p>
+              <h3 className="font-medium text-white">{t('wallet.argent_x')}</h3>
+              <p className="text-xs text-white/60">{t('wallet.starknet_wallet')}</p>
             </div>
             <div className="flex-shrink-0">
               {connecting ? (
@@ -147,14 +149,14 @@ export function WalletConnectModal({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-sm text-[#db74cf] hover:text-[#db74cf]/80 transition-colors"
           >
-            Install Argent X <ExternalLink size={14} />
+            {t('wallet.install_argent_x')} <ExternalLink size={14} />
           </a>
         </div>
 
         {/* Powered by section */}
         <div className="mt-8 pt-4 border-t border-white/10 flex justify-center">
           <div className="text-xs text-white/40 flex items-center gap-2">
-            Powered by
+            {t('wallet.powered_by')}
             <span className="font-['Orbitron'] text-white/60">StarkPulse</span>
           </div>
         </div>

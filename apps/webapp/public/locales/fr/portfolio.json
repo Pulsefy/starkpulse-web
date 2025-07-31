@@ -1,0 +1,28 @@
+{
+  "portfolio": "Portefeuille",
+  "portfolio_value": "Valeur du Portefeuille",
+  "total_loss": "Perte Totale",
+  "top_gainer": "Meilleur Gain",
+  "add_asset": "Ajouter un Actif",
+  "performance": "Performance",
+  "assets": "Actifs",
+  "allocation": "Allocation",
+  "chart_labels": {
+    "portfolio_value": "Valeur du Portefeuille"
+  },
+  "months": {
+    "jan": "Jan",
+    "feb": "Fév",
+    "mar": "Mar",
+    "apr": "Avr",
+    "may": "Mai",
+    "jun": "Juin",
+    "jul": "Juil",
+    "aug": "Août",
+    "sep": "Sep"
+  },
+  "data": {
+    "energy_web": "Energy Web",
+    "ewt": "EWT"
+  }
+} 

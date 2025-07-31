@@ -1,0 +1,13 @@
+fastapi==0.95.1
+uvicorn==0.21.1
+redis==4.5.4
+httpx==0.23.3
+structlog==23.1.0
+prometheus-client==0.16.0
+pydantic==1.10.7
+python-jose[cryptography]==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+pytest==7.3.1
+pytest-asyncio==0.21.0
+pytest-cov==4.0.0

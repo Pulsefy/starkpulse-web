@@ -1,21 +1,21 @@
 "use client";
 
-import React from "react";
 import {
-	Chart as ChartJS,
+	ArcElement,
 	CategoryScale,
-	LinearScale,
-	PointElement,
-	LineElement,
-	Title,
-	Tooltip,
+	Chart as ChartJS,
 	Filler,
 	Legend,
-	ArcElement,
+	LinearScale,
+	LineElement,
+	PointElement,
 	TimeScale,
+	Title,
+	Tooltip,
 } from "chart.js";
-import { Line, Doughnut } from "react-chartjs-2";
 import { PlusIcon } from "lucide-react";
+import React from "react";
+import { Doughnut, Line } from "react-chartjs-2";
 import { PortfolioCoinsTable } from "./portfolio-coins-table";
 
 // Register ChartJS components
@@ -29,7 +29,7 @@ ChartJS.register(
 	Filler,
 	Legend,
 	ArcElement,
-	TimeScale
+	TimeScale,
 );
 
 export function PortfolioSummary() {
@@ -97,9 +97,7 @@ export function PortfolioSummary() {
 					font: {
 						size: 10,
 					},
-					callback: function (value: any) {
-						return "$" + value;
-					},
+					callback: (value: any) => "$" + value,
 				},
 				min: 70,
 				max: 95,
@@ -135,9 +133,7 @@ export function PortfolioSummary() {
 			tooltip: {
 				enabled: true,
 				callbacks: {
-					label: function (context: any) {
-						return context.label + ": " + context.raw + "%";
-					},
+					label: (context: any) => context.label + ": " + context.raw + "%",
 				},
 			},
 		},
@@ -164,9 +160,7 @@ export function PortfolioSummary() {
 				<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 sm:gap-0">
 					<div className="flex flex-wrap items-center">
 						<div className="text-yellow-400 mr-2">⭐</div>
-						<h2 className="text-xl sm:text-2xl font-bold">
-							My Portfolio
-						</h2>
+						<h2 className="text-xl sm:text-2xl font-bold">My Portfolio</h2>
 						<span className="ml-2 sm:ml-3 text-xs sm:text-sm text-gray-400 bg-gray-800/50 px-2 py-0.5 rounded">
 							Default
 						</span>
@@ -185,9 +179,7 @@ export function PortfolioSummary() {
 					<div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
 						<div className="flex flex-col items-center justify-center h-full p-4">
 							<div className="mb-2"></div>
-							<p className="text-sm text-gray-400 mb-1">
-								Current Balance
-							</p>
+							<p className="text-sm text-gray-400 mb-1">Current Balance</p>
 							<p className="text-3xl font-bold text-green-400">
 								${portfolioValue.toFixed(2)}
 							</p>
@@ -201,9 +193,7 @@ export function PortfolioSummary() {
 					<div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
 						<div className="flex flex-col items-center justify-center h-full p-4">
 							<div className="mb-2"></div>
-							<p className="text-sm text-gray-400 mb-1">
-								24h Portfolo Change
-							</p>
+							<p className="text-sm text-gray-400 mb-1">24h Portfolo Change</p>
 							<p className="text-3xl font-bold text-green-400">
 								+${portfolioChange.toFixed(2)}
 							</p>
@@ -220,15 +210,11 @@ export function PortfolioSummary() {
 					<div className="relative w-full h-[200px] bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden border border-[#db74cf]/10">
 						<div className="flex flex-col items-center justify-center h-full p-4">
 							<div className="mb-2"></div>
-							<p className="text-sm text-gray-400 mb-1">
-								Total Profit Loss
-							</p>
+							<p className="text-sm text-gray-400 mb-1">Total Profit Loss</p>
 							<p className="text-3xl font-bold text-red-400">
 								${totalLoss.toFixed(2)}
 							</p>
-							<p className="text-sm text-red-400">
-								↓ {totalLossPercent}%
-							</p>
+							<p className="text-sm text-red-400">↓ {totalLossPercent}%</p>
 							<span className="absolute left-1/2 bottom-3 transform -translate-x-1/2 text-[6px] uppercase text-gray-400">
 								overall performance
 							</span>
@@ -240,23 +226,16 @@ export function PortfolioSummary() {
 					<div className="relative w-full bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden p-4 border border-[#db74cf]/20">
 						<h3 className="text-lg font-semibold mb-4">Holdings</h3>
 						<div className="relative h-64">
-							<Doughnut
-								data={holdingsData}
-								options={holdingsOptions}
-							/>
+							<Doughnut data={holdingsData} options={holdingsOptions} />
 							<div className="absolute inset-0 flex items-center justify-center flex-col">
-								<div className="text-sm text-gray-400">
-									STRK
-								</div>
+								<div className="text-sm text-gray-400">STRK</div>
 								<div className="text-lg font-bold">100.00%</div>
 							</div>
 						</div>
 					</div>
 					<div className="relative w-full bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden p-4 border border-[#db74cf]/20">
 						<div className="flex justify-between items-center mb-4">
-							<h3 className="text-lg font-semibold">
-								Performance
-							</h3>
+							<h3 className="text-lg font-semibold">Performance</h3>
 							<div className="flex space-x-2">
 								<button className="bg-black/30 hover:bg-black/50 text-white px-2 py-1 rounded text-xs">
 									24h
@@ -276,10 +255,7 @@ export function PortfolioSummary() {
 							</div>
 						</div>
 						<div className="h-64">
-							<Line
-								data={performanceData}
-								options={performanceOptions}
-							/>
+							<Line data={performanceData} options={performanceOptions} />
 						</div>
 					</div>
 				</div>

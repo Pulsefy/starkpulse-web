@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Code, Database, Shield } from "lucide-react";
-import { useTranslation } from "@/hooks/useTranslation";
 
 interface FooterLinkProps {
   href: string;
@@ -48,20 +47,18 @@ interface FooterLinksGroupProps {
 }
 
 export function FooterLinksGroup({ addToLinkRef }: FooterLinksGroupProps) {
-  const { t } = useTranslation();
-  
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 md:mt-4">
       <div className="col-span-1">
         <div className="flex flex-col space-y-3 sm:space-y-4">
           <FooterLink href="/" color="blue" addToLinkRef={addToLinkRef}>
-            {t('footer.home')}
+            Home
           </FooterLink>
           <FooterLink href="/about" color="purple" addToLinkRef={addToLinkRef}>
-            {t('footer.about')}
+            About
           </FooterLink>
           <FooterLink href="/news" color="pink" addToLinkRef={addToLinkRef}>
-            {t('footer.news')}
+            News
           </FooterLink>
         </div>
       </div>
@@ -73,13 +70,13 @@ export function FooterLinksGroup({ addToLinkRef }: FooterLinksGroupProps) {
             color="purple"
             addToLinkRef={addToLinkRef}
           >
-            {t('footer.privacy_policy')}
+            Privacy Policy
           </FooterLink>
           <FooterLink href="/terms" color="pink" addToLinkRef={addToLinkRef}>
-            {t('footer.terms_of_use')}
+            Terms of Use
           </FooterLink>
           <FooterLink href="/sitemap" color="blue" addToLinkRef={addToLinkRef}>
-            {t('footer.sitemap')}
+            Sitemap
           </FooterLink>
         </div>
       </div>
@@ -97,7 +94,7 @@ export function FooterLinksGroup({ addToLinkRef }: FooterLinksGroupProps) {
               />
             }
           >
-            {t('footer.api_docs')}
+            API Documentation
           </FooterLink>
           <FooterLink
             href="/developers"
@@ -110,10 +107,10 @@ export function FooterLinksGroup({ addToLinkRef }: FooterLinksGroupProps) {
               />
             }
           >
-            {t('footer.developers')}
+            Developers
           </FooterLink>
           <FooterLink
-            href="/security"
+            href="/status"
             color="pink"
             addToLinkRef={addToLinkRef}
             icon={
@@ -123,7 +120,7 @@ export function FooterLinksGroup({ addToLinkRef }: FooterLinksGroupProps) {
               />
             }
           >
-            {t('footer.security')}
+            Network Status
           </FooterLink>
         </div>
       </div>

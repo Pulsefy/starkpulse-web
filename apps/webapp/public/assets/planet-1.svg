@@ -1,0 +1,35 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main planet body with gradient -->
+  <defs>
+    <radialGradient id="planetGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#FFC107" />
+      <stop offset="70%" stop-color="#FF9800" />
+      <stop offset="100%" stop-color="#F57C00" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Planet glow effect -->
+  <circle cx="50" cy="50" r="42" fill="#FF9800" opacity="0.2" filter="url(#glow)" />
+  
+  <!-- Main planet body -->
+  <circle cx="50" cy="50" r="40" fill="url(#planetGradient)" />
+  
+  <!-- Surface details and craters -->
+  <circle cx="30" cy="40" r="10" fill="#FFCC80" opacity="0.8" />
+  <circle cx="70" cy="60" r="15" fill="#F57C00" opacity="0.7" />
+  
+  <!-- Additional craters and details -->
+  <circle cx="45" cy="25" r="5" fill="#FFCC80" opacity="0.6" />
+  <circle cx="60" cy="35" r="3" fill="#FFCC80" opacity="0.5" />
+  <circle cx="25" cy="65" r="4" fill="#F57C00" opacity="0.6" />
+  <circle cx="55" cy="75" r="6" fill="#F57C00" opacity="0.5" />
+  
+  <!-- Surface texture lines -->
+  <path d="M20 45C30 48 40 46 50 50C60 54 70 52 80 55" stroke="#FFA726" stroke-width="1" opacity="0.4" />
+  <path d="M25 35C35 38 45 36 55 40C65 44 75 42 85 45" stroke="#FFA726" stroke-width="1" opacity="0.3" />
+  <path d="M15 55C25 58 35 56 45 60C55 64 65 62 75 65" stroke="#FFA726" stroke-width="1" opacity="0.3" />
+</svg>

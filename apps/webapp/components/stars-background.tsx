@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -101,48 +101,18 @@ function StarsField() {
   );
 }
 
-// Simple seeded random function for consistent values
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
 export function StarsBackground() {
-  const [isClient, setIsClient] = useState(false);
+  // Generate stars with a class for animation
+  const stars = Array.from({ length: 200 }).map((_, i) => (
+    <div
+      key={i}
+      className="star absolute rounded-full bg-white"
+      style={{
+        width: Math.random() * 2 + 1 + "px",
+        height: Math.random() * 2 + 1 + "px",
+      }}
+    />
+  ));
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Generate stars with seeded random for consistency
-  const stars = Array.from({ length: 200 }).map((_, i) => {
-    const widthSeed = seededRandom(i * 1000 + 1);
-    const heightSeed = seededRandom(i * 1000 + 2);
-    const leftSeed = seededRandom(i * 1000 + 3);
-    const topSeed = seededRandom(i * 1000 + 4);
-    
-    return (
-      <div
-        key={i}
-        className="star absolute rounded-full bg-white"
-        style={{
-          width: widthSeed * 2 + 1 + "px",
-          height: heightSeed * 2 + 1 + "px",
-          left: leftSeed * 100 + "%",
-          top: topSeed * 100 + "%",
-        }}
-      />
-    );
-  });
-
-  // Return empty div on server, populated div on client
-  if (!isClient) {
-    return <div className="w-full h-full relative overflow-hidden" />;
-  }
-
-  return (
-    <div className="w-full h-full relative overflow-hidden">
-      {stars}
-    </div>
-  );
+  return <div className="w-full h-full relative overflow-hidden">{stars}</div>;
 }

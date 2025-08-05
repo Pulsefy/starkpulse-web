@@ -1,5 +1,5 @@
 import { StarsAnimation } from "@/components/stars-animation";
-import "../globals.css"; // Changed from "./globals.css" to "../globals.css"
+import "./globals.css";
 import type { Metadata } from "next";
 import {
   Inter,
@@ -8,12 +8,6 @@ import {
   Chakra_Petch,
   Poppins,
 } from "next/font/google";
-import { StarknetProvider } from "@/providers/starknet-provider";
-import InstallPWAButton from "@/components/InstallPWAButton";
-import { ErrorBoundary } from "@/components/error-boundary";
-
-import { ErrorMonitor } from "@/components/error-monitor";
-import { ErrorTest } from "@/components/error-test";
 
 // Font definitions
 const inter = Inter({
@@ -42,17 +36,17 @@ const chakraPetch = Chakra_Petch({
   display: "swap",
 });
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
-});
-
 export const metadata: Metadata = {
   title: "StarkPulse - Decentralized Crypto News Platform",
   description:
     "Your trusted source for crypto news, trends, and insights powered by StarkNet.",
 };
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+});
 
 export default function RootLayout({
   children,
@@ -60,38 +54,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="data:," />
-        {/* PWA Manifest & Meta Tags */}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#db74cf" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-        <link rel="apple-touch-icon" href="/assets/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-title" content="StarkPulse" />
-        <meta
-          name="description"
-          content="Decentralized Crypto News & Portfolio Platform"
-        />
-      </head>
+    <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable}`}
+        className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable} font-sans min-h-screen bg-[#0a0a0a] text-white`}
       >
-        <ErrorBoundary
-          errorMessage="Application Error"
-          showRetry={true}
-          showReport={true}
-        >
-          <StarknetProvider>{children}</StarknetProvider>
-          <InstallPWAButton />
-
-          <ErrorMonitor />
-          <ErrorTest />
-        </ErrorBoundary>
+        {/* Global animated stars background */}
+        <StarsAnimation />
+        {children}
       </body>
     </html>
   );

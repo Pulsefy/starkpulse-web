@@ -1,5 +1,8 @@
 const Redis = require("redis");
-const { RateLimitViolation, RateLimitMetrics } = require("../models/RateLimit");
+const {
+  RateLimitViolation,
+  RateLimitMetrics,
+} = require("../models/rateLimiter");
 const rateLimitConfig = require("../config/rateLimiting");
 
 class RateLimitService {

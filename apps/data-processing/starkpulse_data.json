@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-08-05T23:46:41.990798",
+  "price_data": [
+    {
+      "price": "45000.0",
+      "timestamp": "2025-08-05T23:46:41.981911",
+      "symbol": "BTC",
+      "market_cap": "0",
+      "volume_24h": "0"
+    },
+    {
+      "price": "3000.0",
+      "timestamp": "2025-08-05T23:46:41.981920",
+      "symbol": "ETH",
+      "market_cap": "0",
+      "volume_24h": "0"
+    },
+    {
+      "price": "1.5",
+      "timestamp": "2025-08-05T23:46:41.981922",
+      "symbol": "STRK",
+      "market_cap": "0",
+      "volume_24h": "0"
+    }
+  ],
+  "news_data": [
+    {
+      "title": "Bitcoin Reaches New Heights",
+      "summary": "Bitcoin continues its upward trend amid institutional adoption...",
+      "timestamp": "2025-08-05T23:46:41.985504",
+      "source": "Mock Crypto News"
+    },
+    {
+      "title": "StarkNet Ecosystem Growth",
+      "summary": "StarkNet sees increased adoption with new DeFi protocols launching...",
+      "timestamp": "2025-08-05T23:46:41.985510",
+      "source": "Mock Blockchain News"
+    }
+  ],
+  "portfolio_data": []
+}

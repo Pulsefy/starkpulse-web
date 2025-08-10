@@ -23,6 +23,7 @@ from src.config.settings import Settings
 from src.config.database import DatabaseConfig
 from src.services.database_service import DatabaseService
 from src.services.cache_service import CacheService
+from src.services.api_manager_service import ApiManagerService 
 from src.processors import (
     CryptoDataProcessor, 
     NewsProcessor, 
@@ -41,7 +42,9 @@ async def main():
     Main function to run data processing operations
     """
     logger.info("Starting StarkPulse Data Processing...")
-
+    
+    # Define api_manager here to ensure it's in scope for the finally block
+    api_manager = None 
     try:
         # Initialize configuration
         settings = Settings()
@@ -53,12 +56,16 @@ async def main():
 
         # Initialize cache
         cache_service = CacheService(settings)
+        
+        # Initialize the API Manager
+        api_manager = ApiManagerService()
 
-        # Initialize processors
-        crypto_processor = CryptoDataProcessor(db_service, cache_service)
-        news_processor = NewsProcessor(db_service, cache_service)
-        portfolio_processor = PortfolioProcessor(db_service, cache_service)
-        starknet_processor = StarkNetProcessor(settings, db_service, cache_service)
+        # Pass the api_manager to your processors
+        # Note: You will need to update the __init__ method of these classes
+        crypto_processor = CryptoDataProcessor(db_service, cache_service, api_manager)
+        news_processor = NewsProcessor(db_service, cache_service, api_manager)
+        portfolio_processor = PortfolioProcessor(db_service, cache_service, api_manager)
+        starknet_processor = StarkNetProcessor(settings, db_service, cache_service, api_manager)
 
         # Run initial data processing
         logger.info("Running initial data processing...")
@@ -82,6 +89,11 @@ async def main():
     except Exception as e:
         logger.error(f"Error in data processing: {str(e)}")
         sys.exit(1)
+    finally:
+        # Add a finally block to gracefully close the API session
+        if api_manager:
+            logger.info("Closing API Manager session...")
+            await api_manager.close_session()
 
 
 if __name__ == "__main__":

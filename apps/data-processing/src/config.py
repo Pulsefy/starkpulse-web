@@ -38,6 +38,36 @@ class Config:
         # Logging
         self.log_level = os.getenv('LOG_LEVEL', 'INFO')
         self.log_file = os.getenv('LOG_FILE', 'logs/data_processing.log')
+        
+        ## API Providers dictionary here
+        self.api_providers = {
+            "crypto_prices": {
+                "primary": {
+                    "name": "coingecko",
+                    "base_url": "https://api.coingecko.com/api/v3/",
+                    "api_key": self.coingecko_api_key,
+                    "rate_limit": 50,  # requests per minute
+                    "cost_per_call": 0.001,
+                },
+                "failover": {
+                    "name": "coinmarketcap",
+                    "base_url": "https://pro-api.coinmarketcap.com/v1/",
+                    "api_key": self.coinmarketcap_api_key,
+                    "rate_limit": 30,
+                    "cost_per_call": 0.005,
+                },
+            },
+            "news": {
+                "primary": {
+                    "name": "newsapi",
+                    "base_url": "https://newsapi.org/v2/",
+                    "api_key": self.news_api_key,
+                    "rate_limit": 100,
+                    "cost_per_call": 0.0,
+                }
+            }
+        
+        }
     
     def validate(self) -> bool:
         """
@@ -46,7 +76,8 @@ class Config:
         required_vars = [
             'DATABASE_URL',
             'COINMARKETCAP_API_KEY',
-            'NEWS_API_KEY'
+            'NEWS_API_KEY',
+            'COINGECKO_API_KEY' 
         ]
         
         missing_vars = [var for var in required_vars if not getattr(self, var.lower())]

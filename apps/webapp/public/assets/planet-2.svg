@@ -1,0 +1,55 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Definitions for gradients and filters -->
+  <defs>
+    <radialGradient id="planetGradient" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
+      <stop offset="0%" stop-color="#CE93D8" />
+      <stop offset="50%" stop-color="#9C27B0" />
+      <stop offset="100%" stop-color="#7B1FA2" />
+    </radialGradient>
+    <linearGradient id="ringGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#CE93D8" stop-opacity="0.1" />
+      <stop offset="20%" stop-color="#CE93D8" stop-opacity="0.7" />
+      <stop offset="50%" stop-color="#9C27B0" stop-opacity="0.9" />
+      <stop offset="80%" stop-color="#CE93D8" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#CE93D8" stop-opacity="0.1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Planet glow effect -->
+  <circle cx="50" cy="50" r="42" fill="#9C27B0" opacity="0.2" filter="url(#glow)" />
+  
+  <!-- Rings behind the planet (bottom part) -->
+  <ellipse cx="50" cy="50" rx="60" ry="15" fill="url(#ringGradient)" opacity="0.6" transform="rotate(-15 50 50)" />
+  
+  <!-- Main planet body -->
+  <circle cx="50" cy="50" r="35" fill="url(#planetGradient)" />
+  
+  <!-- Surface details -->
+  <path d="M25 40C35 45 45 42 55 45C65 48 75 45 80 50" stroke="#CE93D8" stroke-width="2" opacity="0.5" />
+  <path d="M20 55C30 60 40 57 50 60C60 63 70 60 75 65" stroke="#CE93D8" stroke-width="2" opacity="0.5" />
+  
+  <!-- Surface spots and details -->
+  <circle cx="35" cy="35" r="6" fill="#7B1FA2" opacity="0.7" />
+  <circle cx="65" cy="40" r="8" fill="#7B1FA2" opacity="0.7" />
+  <circle cx="40" cy="60" r="5" fill="#7B1FA2" opacity="0.7" />
+  <circle cx="60" cy="65" r="4" fill="#7B1FA2" opacity="0.7" />
+  
+  <!-- Highlight spots -->
+  <circle cx="30" cy="30" r="3" fill="#CE93D8" opacity="0.8" />
+  <circle cx="65" cy="35" r="2" fill="#CE93D8" opacity="0.8" />
+  <circle cx="45" cy="55" r="2" fill="#CE93D8" opacity="0.8" />
+  
+  <!-- Rings in front of the planet (top part) -->
+  <ellipse cx="50" cy="50" rx="60" ry="15" fill="url(#ringGradient)" opacity="0.8" transform="rotate(-15 50 50)" clip-path="url(#topHalf)" />
+  
+  <!-- Clip path for top half of rings -->
+  <defs>
+    <clipPath id="topHalf">
+      <rect x="0" y="0" width="100" height="50" />
+    </clipPath>
+  </defs>
+</svg>

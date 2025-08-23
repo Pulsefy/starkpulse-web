@@ -4,8 +4,6 @@ import { StarsBackground } from "@/components/stars-background";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-// BACKGROUND ANIMATION FOR FOOTER ADDED 
-
 export function AnimatedBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
 

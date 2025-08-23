@@ -1,0 +1,69 @@
+2025-08-05 23:21:12,376 - __main__ - INFO - Setting up database...
+2025-08-05 23:21:17,480 - __main__ - ERROR - Database setup failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-05 23:33:09,226 - __main__ - INFO - Starting StarkPulse Data Processing (Standalone Mode)...
+2025-08-05 23:33:09,230 - __main__ - INFO - Running data collection...
+2025-08-05 23:33:09,231 - __main__ - INFO - Fetching sample cryptocurrency data...
+2025-08-05 23:33:09,232 - __main__ - ERROR - Error fetching crypto data: 'str' object has no attribute 'coinmarketcap_api_key'
+2025-08-05 23:33:09,233 - __main__ - INFO - Fetching sample news data...
+2025-08-05 23:33:09,233 - __main__ - INFO - News API integration available but not implemented in this example
+2025-08-05 23:33:09,234 - __main__ - INFO - Saved 2 news records to memory
+2025-08-05 23:33:09,234 - __main__ - INFO - Latest News:
+2025-08-05 23:33:09,235 - __main__ - INFO - - Bitcoin Reaches New Heights
+2025-08-05 23:33:09,235 - __main__ - INFO - - StarkNet Ecosystem Growth
+2025-08-05 23:33:09,239 - __main__ - ERROR - Error in standalone data processing: Object of type datetime is not JSON serializable
+2025-08-05 23:37:34,016 - __main__ - INFO - Starting StarkPulse Data Processing (Standalone Mode)...
+2025-08-05 23:37:34,017 - __main__ - INFO - Running data collection...
+2025-08-05 23:37:34,017 - __main__ - INFO - Fetching sample cryptocurrency data...
+2025-08-05 23:37:35,059 - __main__ - ERROR - Error fetching crypto data: 'str' object has no attribute 'coinmarketcap_api_key'
+2025-08-05 23:37:35,077 - __main__ - INFO - Saved 3 price records to memory
+2025-08-05 23:37:35,077 - __main__ - INFO - Fallback to mock data due to error
+2025-08-05 23:37:35,099 - __main__ - INFO - Fetching sample news data...
+2025-08-05 23:37:35,158 - __main__ - INFO - News API key found but integration not implemented in this example
+2025-08-05 23:37:35,237 - __main__ - INFO - Saved 2 news records to memory
+2025-08-05 23:37:35,284 - __main__ - INFO - Latest News:
+2025-08-05 23:37:35,476 - __main__ - INFO - - Bitcoin Reaches New Heights
+2025-08-05 23:37:35,579 - __main__ - INFO - - StarkNet Ecosystem Growth
+2025-08-05 23:37:35,676 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-05 23:37:35,753 - __main__ - INFO - Standalone data processing completed successfully!
+2025-08-05 23:37:35,822 - __main__ - INFO - Collected 3 price records
+2025-08-05 23:37:35,894 - __main__ - INFO - Collected 2 news records
+2025-08-05 23:37:36,007 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-05 23:40:34,920 - __main__ - INFO - Starting StarkPulse Data Processing (Standalone Mode)...
+2025-08-05 23:40:34,921 - __main__ - INFO - Running data collection...
+2025-08-05 23:40:34,922 - __main__ - INFO - Fetching sample cryptocurrency data...
+2025-08-05 23:40:35,925 - __main__ - ERROR - Error fetching crypto data: 'str' object has no attribute 'coinmarketcap_api_key'
+2025-08-05 23:40:35,926 - __main__ - INFO - Saved 3 price records to memory
+2025-08-05 23:40:35,927 - __main__ - INFO - Fallback to mock data due to error
+2025-08-05 23:40:35,927 - __main__ - INFO - Fetching sample news data...
+2025-08-05 23:40:35,927 - __main__ - INFO - News API key found but integration not implemented in this example
+2025-08-05 23:40:35,928 - __main__ - INFO - Saved 2 news records to memory
+2025-08-05 23:40:35,928 - __main__ - INFO - Latest News:
+2025-08-05 23:40:35,929 - __main__ - INFO - - Bitcoin Reaches New Heights
+2025-08-05 23:40:35,929 - __main__ - INFO - - StarkNet Ecosystem Growth
+2025-08-05 23:40:35,932 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-05 23:40:35,934 - __main__ - INFO - Standalone data processing completed successfully!
+2025-08-05 23:40:35,935 - __main__ - INFO - Collected 3 price records
+2025-08-05 23:40:35,935 - __main__ - INFO - Collected 2 news records
+2025-08-05 23:40:35,936 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-05 23:46:40,998 - __main__ - INFO - Starting StarkPulse Data Processing (Standalone Mode)...
+2025-08-05 23:46:40,999 - __main__ - INFO - Running data collection...
+2025-08-05 23:46:40,999 - __main__ - INFO - Fetching sample cryptocurrency data...
+2025-08-05 23:46:41,979 - __main__ - ERROR - Error fetching crypto data: 'str' object has no attribute 'coinmarketcap_api_key'
+2025-08-05 23:46:41,982 - __main__ - INFO - Saved 3 price records to memory
+2025-08-05 23:46:41,982 - __main__ - INFO - Fallback to mock data due to error
+2025-08-05 23:46:41,983 - __main__ - INFO - Fetching sample news data...
+2025-08-05 23:46:41,984 - __main__ - INFO - News API key found but integration not implemented in this example
+2025-08-05 23:46:41,985 - __main__ - INFO - Saved 2 news records to memory
+2025-08-05 23:46:41,986 - __main__ - INFO - Latest News:
+2025-08-05 23:46:41,986 - __main__ - INFO - - Bitcoin Reaches New Heights
+2025-08-05 23:46:41,989 - __main__ - INFO - - StarkNet Ecosystem Growth
+2025-08-05 23:46:41,993 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-05 23:46:41,999 - __main__ - INFO - Standalone data processing completed successfully!
+2025-08-05 23:46:42,001 - __main__ - INFO - Collected 3 price records
+2025-08-05 23:46:42,006 - __main__ - INFO - Collected 2 news records
+2025-08-05 23:46:42,007 - __main__ - INFO - Data exported to starkpulse_data.json

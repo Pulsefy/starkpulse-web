@@ -1,0 +1,62 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Definitions for gradients and filters -->
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E1F5FE" />
+      <stop offset="50%" stop-color="#B3E5FC" />
+      <stop offset="100%" stop-color="#81D4FA" />
+    </linearGradient>
+    <linearGradient id="engineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFCCBC" />
+      <stop offset="50%" stop-color="#FF8A65" />
+      <stop offset="100%" stop-color="#FF5722" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="engineGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Rocket body glow -->
+  <path d="M50 10L65 50H35L50 10Z" fill="#2196F3" opacity="0.2" filter="url(#glow)" />
+  
+  <!-- Rocket nose cone -->
+  <path d="M50 10L65 50H35L50 10Z" fill="url(#bodyGradient)" stroke="#81D4FA" stroke-width="1" />
+  
+  <!-- Rocket body -->
+  <path d="M35 50H65V65H35V50Z" fill="#E0E0E0" stroke="#BDBDBD" stroke-width="1" />
+  
+  <!-- Rocket body details -->
+  <rect x="40" y="53" width="20" height="3" rx="1" fill="#90CAF9" />
+  <rect x="40" y="58" width="20" height="3" rx="1" fill="#90CAF9" />
+  
+  <!-- Rocket windows -->
+  <circle cx="50" cy="45" r="3" fill="#E1F5FE" stroke="#81D4FA" stroke-width="0.5" />
+  <circle cx="43" cy="45" r="2" fill="#E1F5FE" stroke="#81D4FA" stroke-width="0.5" />
+  <circle cx="57" cy="45" r="2" fill="#E1F5FE" stroke="#81D4FA" stroke-width="0.5" />
+  
+  <!-- Engine section -->
+  <path d="M42 65L35 90H65L58 65H42Z" fill="#9E9E9E" stroke="#757575" stroke-width="1" />
+  
+  <!-- Engine nozzles -->
+  <path d="M40 75C40 75 38 85 38 90" stroke="#757575" stroke-width="2" />
+  <path d="M50 75C50 75 50 85 50 90" stroke="#757575" stroke-width="2" />
+  <path d="M60 75C60 75 62 85 62 90" stroke="#757575" stroke-width="2" />
+  
+  <!-- Engine flames -->
+  <path d="M38 90C38 90 40 100 42 105C44 100 42 90 42 90" fill="url(#engineGradient)" filter="url(#engineGlow)" opacity="0.8" />
+  <path d="M48 90C48 90 50 105 52 110C54 105 52 90 52 90" fill="url(#engineGradient)" filter="url(#engineGlow)" opacity="0.8" />
+  <path d="M58 90C58 90 60 100 62 105C64 100 62 90 62 90" fill="url(#engineGradient)" filter="url(#engineGlow)" opacity="0.8" />
+  
+  <!-- Wings -->
+  <path d="M35 55H20L25 65H35V55Z" fill="#BDBDBD" stroke="#9E9E9E" stroke-width="1" />
+  <path d="M65 55H80L75 65H65V55Z" fill="#BDBDBD" stroke="#9E9E9E" stroke-width="1" />
+  
+  <!-- Wing details -->
+  <path d="M25 57L30 62" stroke="#9E9E9E" stroke-width="0.5" />
+  <path d="M75 57L70 62" stroke="#9E9E9E" stroke-width="0.5" />
+</svg>

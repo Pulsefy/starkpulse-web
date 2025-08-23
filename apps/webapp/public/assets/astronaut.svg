@@ -1,0 +1,62 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="suitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E0E0E0" />
+    </linearGradient>
+    <linearGradient id="visorGradient" x1="30%" y1="20%" x2="70%" y2="80%">
+      <stop offset="0%" stop-color="#64B5F6" />
+      <stop offset="50%" stop-color="#2196F3" />
+      <stop offset="100%" stop-color="#1976D2" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Backpack/Life Support System -->
+  <rect x="32" y="25" width="16" height="25" rx="2" fill="#BDBDBD" />
+  <rect x="34" y="27" width="12" height="21" rx="1" fill="#9E9E9E" />
+  <rect x="36" y="30" width="8" height="3" rx="1" fill="#616161" />
+  <rect x="36" y="35" width="8" height="3" rx="1" fill="#616161" />
+  <rect x="36" y="40" width="8" height="3" rx="1" fill="#616161" />
+  
+  <!-- Helmet -->
+  <circle cx="40" cy="40" r="20" fill="url(#suitGradient)" stroke="#BDBDBD" stroke-width="1.5" />
+  
+  <!-- Helmet Visor -->
+  <path d="M30 40C30 34 34 30 40 30C46 30 50 34 50 40" fill="url(#visorGradient)" />
+  <path d="M30 40C30 34 34 30 40 30C46 30 50 34 50 40" stroke="#1565C0" stroke-width="1" opacity="0.7" />
+  
+  <!-- Helmet Reflection -->
+  <path d="M33 35C35 33 38 32 40 32C42 32 45 33 47 35" stroke="#FFFFFF" stroke-width="1" opacity="0.8" />
+  
+  <!-- Suit Body -->
+  <path d="M30 60V50C30 44 34 40 40 40C46 40 50 44 50 60" fill="url(#suitGradient)" stroke="#BDBDBD" stroke-width="1" />
+  
+  <!-- Suit Details -->
+  <path d="M35 45H45" stroke="#BDBDBD" stroke-width="1" />
+  <path d="M33 50H47" stroke="#BDBDBD" stroke-width="1" />
+  <path d="M32 55H48" stroke="#BDBDBD" stroke-width="1" />
+  
+  <!-- Arm Connectors -->
+  <path d="M30 45C25 45 20 50 18 55" stroke="#E0E0E0" stroke-width="3" stroke-linecap="round" />
+  <path d="M50 45C55 45 60 50 62 55" stroke="#E0E0E0" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Legs -->
+  <path d="M35 60V75" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round" />
+  <path d="M45 60V75" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- Boots -->
+  <path d="M33 75H37V80H33V75Z" fill="#BDBDBD" stroke="#9E9E9E" stroke-width="1" />
+  <path d="M43 75H47V80H43V75Z" fill="#BDBDBD" stroke="#9E9E9E" stroke-width="1" />
+  
+  <!-- Subtle Glow Effect -->
+  <circle cx="40" cy="40" r="22" fill="#FFFFFF" opacity="0.1" filter="url(#glow)" />
+  
+  <!-- NASA Logo -->
+  <circle cx="40" cy="52" r="2" fill="#F44336" />
+  <path d="M38 52C38 51 39 50 40 50C41 50 42 51 42 52" stroke="#1565C0" stroke-width="0.5" />
+  <path d="M38 52C38 53 39 54 40 54C41 54 42 53 42 52" stroke="#1565C0" stroke-width="0.5" />
+</svg>

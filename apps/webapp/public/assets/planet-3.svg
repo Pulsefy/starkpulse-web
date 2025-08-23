@@ -1,0 +1,42 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Definitions for gradients and filters -->
+  <defs>
+    <radialGradient id="planetGradient" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
+      <stop offset="0%" stop-color="#81C784" />
+      <stop offset="50%" stop-color="#4CAF50" />
+      <stop offset="100%" stop-color="#2E7D32" />
+    </radialGradient>
+    <radialGradient id="atmosphereGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#B3E5FC" stop-opacity="0" />
+      <stop offset="100%" stop-color="#B3E5FC" stop-opacity="0.3" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Atmosphere glow -->
+  <circle cx="50" cy="50" r="45" fill="url(#atmosphereGradient)" filter="url(#glow)" />
+  
+  <!-- Planet glow effect -->
+  <circle cx="50" cy="50" r="42" fill="#4CAF50" opacity="0.2" filter="url(#glow)" />
+  
+  <!-- Main planet body -->
+  <circle cx="50" cy="50" r="40" fill="url(#planetGradient)" />
+  
+  <!-- Land masses -->
+  <path d="M30 30C40 25 50 28 60 25C70 22 75 30 70 40C65 50 55 45 45 50C35 55 25 50 30 40C35 30 25 35 30 30Z" fill="#388E3C" opacity="0.8" />
+  <path d="M20 60C30 55 40 58 50 55C60 52 65 60 60 70C55 80 45 75 35 80C25 85 15 80 20 70C25 60 15 65 20 60Z" fill="#388E3C" opacity="0.8" />
+  
+  <!-- Cloud formations -->
+  <path d="M25 35C35 30 45 32 55 30C65 28 70 35 65 40C60 45 50 42 40 45C30 48 20 45 25 40C30 35 20 40 25 35Z" fill="#E0F7FA" opacity="0.6" />
+  <path d="M35 65C45 60 55 62 65 60C75 58 80 65 75 70C70 75 60 72 50 75C40 78 30 75 35 70C40 65 30 70 35 65Z" fill="#E0F7FA" opacity="0.6" />
+  
+  <!-- Polar ice caps -->
+  <path d="M40 15C45 12 55 12 60 15C65 18 65 22 60 25C55 28 45 28 40 25C35 22 35 18 40 15Z" fill="#E1F5FE" opacity="0.9" />
+  <path d="M40 85C45 82 55 82 60 85C65 88 65 92 60 95C55 98 45 98 40 95C35 92 35 88 40 85Z" fill="#E1F5FE" opacity="0.9" />
+  
+  <!-- Subtle atmospheric highlight -->
+  <circle cx="40" cy="40" r="35" fill="#B3E5FC" opacity="0.1" />
+</svg>

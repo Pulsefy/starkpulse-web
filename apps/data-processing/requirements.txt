@@ -24,7 +24,8 @@ feedparser>=6.0.10
 
 # Blockchain and crypto
 web3>=6.0.0
-starknet-py>=0.25.0
+# Temporarily disable starknet-py due to Python 3.13 compatibility
+# starknet-py>=0.24.0,<0.25.0
 ccxt>=4.0.0
 
 # Caching and message queues
@@ -62,7 +63,8 @@ python-json-logger>=2.0.7
 # Text processing and NLP
 nltk>=3.8.1
 textblob>=0.17.1
-spacy>=3.7.0
+# Temporarily disable spacy due to Python 3.13 compatibility
+# spacy>=3.7.0
 
 # Financial calculations
 QuantLib>=1.32

@@ -1,0 +1,11 @@
+jobs:
+  - group_by: 'category'
+    agg_func:
+      value: 'sum'
+    format: 'csv'
+    output_path: 'output/report.csv'
+    email: 'recipient@example.com'
+    schedule:
+      day_of_week: 'mon-fri'
+      hour: 8
+      minute: 0

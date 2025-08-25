@@ -33,6 +33,7 @@ dotenv.config();
 // App Initialization
 // ==========================
 const app = express();
+const monitoringRouter = require('./src/routes/monitoring');
 const PORT = config.port || process.env.PORT || 3000;
 const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
 
@@ -156,6 +157,7 @@ app.use("/api/user", (req, res, next) => {
 app.use("/api/health", healthRoutes);
 app.use("/api/metrics", metricsRoutes);
 
+app.use('/monitoring', monitoringRouter);
 // API Routes with Versioning
 // app.use("/api", require("./src/routes"));
 

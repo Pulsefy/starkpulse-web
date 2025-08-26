@@ -1,55 +1,39 @@
-"""
-Logging configuration for StarkPulse Data Processing
-"""
-
-import os
 import logging
-from pathlib import Path
+import sys
+import os
+import structlog
 
-def setup_logger(name: str, log_level: str = 'INFO') -> logging.Logger:
+def setup_logger():
     """
-    Setup logger with file and console handlers
-    
-    Args:
-        name: Logger name
-        log_level: Logging level
-    
-    Returns:
-        Configured logger instance
+    Configures a structured JSON logger using structlog.
+    This setup ensures that all log outputs are in a machine-readable
+    JSON format, ready for aggregation by tools like Loki or Splunk.
     """
+    # Get log level from environment variable, default to INFO
+    log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
     
-    # Create logs directory if it doesn't exist
-    log_dir = Path('logs')
-    log_dir.mkdir(exist_ok=True)
-    
-    # Create logger
-    logger = logging.getLogger(name)
-    logger.setLevel(getattr(logging, log_level.upper()))
-    
-    # Avoid duplicate handlers
-    if logger.handlers:
-        return logger
-    
-    # Create formatters
-    file_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # Configure the standard logging module which structlog will wrap
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=log_level,
     )
-    console_formatter = logging.Formatter(
-        '%(levelname)s - %(name)s - %(message)s'
+
+    # Configure structlog processors
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.add_logger_name,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.JSONRenderer() # Renders the final log entry as JSON
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
     )
     
-    # File handler
-    file_handler = logging.FileHandler(log_dir / 'data_processing.log')
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(file_formatter)
-    
-    # Console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(console_formatter)
-    
-    # Add handlers to logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    
-    return logger
+    # Return a structlog-wrapped logger
+    return structlog.get_logger()

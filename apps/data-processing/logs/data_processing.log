@@ -67,3 +67,84 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection re
 2025-08-05 23:46:42,001 - __main__ - INFO - Collected 3 price records
 2025-08-05 23:46:42,006 - __main__ - INFO - Collected 2 news records
 2025-08-05 23:46:42,007 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-26 05:35:26,989 - __main__ - INFO - Starting StarkPulse Data Processing (Standalone Mode)...
+2025-08-26 05:35:26,989 - __main__ - INFO - Running data collection...
+2025-08-26 05:35:26,989 - __main__ - INFO - Fetching sample cryptocurrency data...
+2025-08-26 05:35:27,386 - __main__ - ERROR - Error fetching crypto data: 'str' object has no attribute 'coinmarketcap_api_key'
+2025-08-26 05:35:27,386 - __main__ - INFO - Saved 3 price records to memory
+2025-08-26 05:35:27,386 - __main__ - INFO - Fallback to mock data due to error
+2025-08-26 05:35:27,386 - __main__ - INFO - Fetching and processing live news data...
+2025-08-26 05:35:27,386 - __main__ - INFO - Initializing NLP models...
+2025-08-26 05:35:27,387 - __main__ - ERROR - An error occurred in fetch_sample_news_data: 
+**********************************************************************
+  Resource [93mvader_lexicon[0m not found.
+  Please use the NLTK Downloader to obtain the resource:
+
+  [31m>>> import nltk
+  >>> nltk.download('vader_lexicon')
+  [0m
+  For more information see: https://www.nltk.org/data.html
+
+  Attempted to load [93msentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt[0m
+
+  Searched in:
+    - '/Users/ibinola/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/share/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/lib/nltk_data'
+    - '/usr/share/nltk_data'
+    - '/usr/local/share/nltk_data'
+    - '/usr/lib/nltk_data'
+    - '/usr/local/lib/nltk_data'
+    - ''
+**********************************************************************
+
+2025-08-26 05:35:27,390 - __main__ - ERROR - Traceback: Traceback (most recent call last):
+  File "/Users/ibinola/Developer/starkpulse-web/apps/data-processing/main_standalone.py", line 198, in fetch_sample_news_data
+    sid = SentimentIntensityAnalyzer()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/nltk/sentiment/vader.py", line 340, in __init__
+    self.lexicon_file = nltk.data.load(lexicon_file)
+                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/nltk/data.py", line 836, in load
+    opened_resource = _open(resource_url)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/nltk/data.py", line 962, in _open
+    return find(path_, path + [""]).open()
+           ~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/nltk/data.py", line 579, in find
+    raise LookupError(resource_not_found)
+LookupError: 
+**********************************************************************
+  Resource [93mvader_lexicon[0m not found.
+  Please use the NLTK Downloader to obtain the resource:
+
+  [31m>>> import nltk
+  >>> nltk.download('vader_lexicon')
+  [0m
+  For more information see: https://www.nltk.org/data.html
+
+  Attempted to load [93msentiment/vader_lexicon.zip/vader_lexicon/vader_lexicon.txt[0m
+
+  Searched in:
+    - '/Users/ibinola/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/share/nltk_data'
+    - '/Library/Frameworks/Python.framework/Versions/3.13/lib/nltk_data'
+    - '/usr/share/nltk_data'
+    - '/usr/local/share/nltk_data'
+    - '/usr/lib/nltk_data'
+    - '/usr/local/lib/nltk_data'
+    - ''
+**********************************************************************
+
+
+2025-08-26 05:35:27,390 - __main__ - INFO - Fetching sample news data...
+2025-08-26 05:35:27,390 - __main__ - INFO - News API key found but integration not implemented in this example
+2025-08-26 05:35:27,390 - __main__ - INFO - Saved 2 news records to memory
+2025-08-26 05:35:27,390 - __main__ - INFO - Latest News:
+2025-08-26 05:35:27,390 - __main__ - INFO - - Bitcoin Reaches New Heights
+2025-08-26 05:35:27,390 - __main__ - INFO - - StarkNet Ecosystem Growth
+2025-08-26 05:35:27,391 - __main__ - INFO - Data exported to starkpulse_data.json
+2025-08-26 05:35:27,391 - __main__ - INFO - Standalone data processing completed successfully!
+2025-08-26 05:35:27,391 - __main__ - INFO - Collected 3 price records
+2025-08-26 05:35:27,391 - __main__ - INFO - Collected 2 news records
+2025-08-26 05:35:27,391 - __main__ - INFO - Data exported to starkpulse_data.json

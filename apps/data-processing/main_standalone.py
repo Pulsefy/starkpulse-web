@@ -12,6 +12,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 import json
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from transformers import pipeline
+import feedparser 
 
 # Add the current directory to Python path
 sys.path.append(str(Path(__file__).parent / 'src'))
@@ -182,7 +185,70 @@ async def fetch_sample_crypto_data(storage: MockDataStorage):
         storage.save_price_data(mock_data)
         logger.info("Fallback to mock data due to error")
 
+
+
 async def fetch_sample_news_data(storage: MockDataStorage):
+
+    logger.info("Fetching and processing live news data...")
+    
+    try:
+        # 1. Initialize NLP Models
+        # This is done here for simplicity in a standalone script.
+        logger.info("Initializing NLP models...")
+        sid = SentimentIntensityAnalyzer()
+        classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+        candidate_labels = ["Regulation", "Market Analysis", "DeFi", "NFTs", "Security", "Adoption"]
+        
+        # 2. Fetch Real News Data (from an RSS feed, no API key needed)
+        logger.info("Fetching news from Cointelegraph RSS feed...")
+        feed = feedparser.parse('https://cointelegraph.com/rss')
+        
+        if not feed.entries:
+            logger.warning("No articles found in the RSS feed.")
+            return
+
+        processed_news = []
+        seen_titles = set()  # Simple in-memory deduplication for this run
+
+        # 3. Process Each Article
+        logger.info(f"Processing {len(feed.entries)} fetched articles...")
+        for article in feed.entries:
+            if article.title in seen_titles:
+                continue  # Skip duplicate title
+            seen_titles.add(article.title)
+
+            # Combine title and summary for better analysis context
+            content_to_analyze = f"{article.title}. {article.summary}"
+
+            # Perform Sentiment Analysis
+            sentiment_score = sid.polarity_scores(content_to_analyze)['compound']
+
+            # Perform Topic Classification
+            topic_result = classifier(content_to_analyze, candidate_labels)
+            
+            # Append the structured, enriched data
+            processed_news.append({
+                'title': article.title,
+                'summary': article.summary,
+                'link': article.link,
+                'source': 'Cointelegraph RSS',
+                'timestamp': datetime.now().isoformat(),
+                'sentiment_score': sentiment_score,
+                'topic': topic_result['labels'][0],
+                'topic_confidence': topic_result['scores'][0]
+            })
+
+        # 4. Save Processed Data to Mock Storage
+        if processed_news:
+            storage.save_news_data(processed_news)
+            logger.info(f"Successfully processed and stored {len(processed_news)} news articles.")
+        else:
+            logger.info("No new unique articles to process.")
+
+    except Exception as e:
+        logger.error(f"An error occurred in fetch_sample_news_data: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
     """Fetch sample news data without database"""
     logger.info("Fetching sample news data...")
     

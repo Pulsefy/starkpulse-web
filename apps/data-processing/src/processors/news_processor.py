@@ -19,6 +19,7 @@ from ..utils.anomaly_detection import AnomalyDetector
 from ..utils.news_utils import classify_topic, get_sentiment
 from ..services.alert_service import AlertService
 from ..utils.helpers import parse_datetime, extract_domain, clean_text
+from ..utils.metrics import ARTICLES_PROCESSED_TOTAL, ERRORS_TOTAL
 
 logger = setup_logger(__name__)
 
@@ -26,7 +27,7 @@ class NewsProcessor:
     """
     Processor for news data collection and processing with validation, anomaly detection, and quality monitoring
     """
-    def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
+  def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
                  news_client: NewsAPIClient):
         self.db_service = db_service
         self.cache_service = cache_service
@@ -39,23 +40,6 @@ class NewsProcessor:
             'blockchain', 'defi', 'nft', 'altcoin', 'stablecoin', 'mining',
             'starknet', 'stark', 'layer2', 'l2', 'scaling', 'zk-stark'
         ]
-    """
-    Processor for news data collection and processing
-    """
-
-    def __init__(self, db_service: DatabaseService, cache_service: CacheService, 
-                 news_client: NewsAPIClient):
-        self.db_service = db_service
-        self.cache_service = cache_service
-        self.news_client = news_client
-
-        # Crypto-related keywords for filtering
-        self.crypto_keywords = [
-            'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto',
-            'blockchain', 'defi', 'nft', 'altcoin', 'stablecoin', 'mining',
-            'starknet', 'stark', 'layer2', 'l2', 'scaling', 'zk-stark'
-        ]
-
     async def update_news_sources(self) -> int:
         """
         Update and validate news sources
@@ -140,7 +124,7 @@ class NewsProcessor:
         try:
             response = await self.news_client.get_everything("crypto OR bitcoin OR ethereum", from_date=from_date)
             articles = response.get("articles", [])
-            logger.info(f"Fetched {len(articles)} articles")
+            logger.info("Fetched articles", count=len(articles))
 
             valid_articles = []
             with self.db_service.get_session() as session:
@@ -149,8 +133,7 @@ class NewsProcessor:
 
                     url = article.get("url")
                     if not url or session.query(NewsArticle).filter_by(url=url).first():
-                        continue  # Skip duplicates
-
+                        continue  
                     title = article.get("title", "")
                     description = article.get("description", "")
                     content = article.get("content", "")
@@ -176,11 +159,27 @@ class NewsProcessor:
                     valid_articles.append(news_doc)
 
             saved_count = self.db_service.save_news_articles(valid_articles)
-            self.cache_service.set("news:recent", valid_articles[:10], ttl=1800)
-            logger.info(f"Saved {saved_count} articles | Quality: {self.quality_metrics.get_metrics()}")
+            
+            if saved_count > 0:
+                self.cache_service.set("news:recent", valid_articles[:10], ttl=1800)
+                
+                
+                logger.info(
+                    "news_articles_saved", 
+                    count=saved_count, 
+                    quality_metrics=self.quality_metrics.get_metrics()
+                )
+                
+            
+                ARTICLES_PROCESSED_TOTAL.labels(source='news_api').inc(saved_count)
+            
             return saved_count
         except Exception as e:
-            logger.error(f"Failed fetching news: {str(e)}")
+            
+            logger.error("news_fetch_failed", error=str(e), exc_info=True)
+            
+            ERRORS_TOTAL.labels(type='news_api_fetch').inc()
+            
             return 0
 
     def _get_or_create_source(self, domain: str, source_info: Dict[str, Any]) -> Optional[NewsSource]:

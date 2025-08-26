@@ -114,3 +114,5 @@ spacy
 scikit-learn
 spacy-langdetect
 spacy[fr]
+structlog
+prometheus

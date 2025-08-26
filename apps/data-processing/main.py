@@ -15,6 +15,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+from prometheus_client import start_http_server
 
 # Add the current directory to Python path
 sys.path.append(str(Path(__file__).parent / 'src'))
@@ -41,6 +42,8 @@ async def main():
     Main function to run data processing operations
     """
     logger.info("Starting StarkPulse Data Processing...")
+    start_http_server(8001)
+    logger.info("Prometheus metrics server started", port=8001)
 
     try:
         # Initialize configuration

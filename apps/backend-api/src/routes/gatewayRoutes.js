@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/auth'); // ✅ FIXED
 
 const router = express.Router();
 
-router.use(limiter);
+// router.use(limiter);
 router.use(requireAuth); // ✅ USE A FUNCTION
 
 router.use('/users', proxyService('http://localhost:3001'));

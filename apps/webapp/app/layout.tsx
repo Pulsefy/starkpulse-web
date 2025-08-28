@@ -1,3 +1,4 @@
+import { StarknetProvider } from "./providers";
 import { StarsAnimation } from "@/components/stars-animation";
 import "./globals.css";
 import type { Metadata } from "next";
@@ -59,8 +60,10 @@ export default function RootLayout({
         className={`${inter.variable} ${orbitron.variable} ${spaceMono.variable} ${chakraPetch.variable} ${poppins.variable} font-sans min-h-screen bg-[#0a0a0a] text-white`}
       >
         {/* Global animated stars background */}
-        <StarsAnimation />
-        {children}
+        <StarknetProvider>
+          <StarsAnimation />
+          {children}
+        </StarknetProvider>
       </body>
     </html>
   );

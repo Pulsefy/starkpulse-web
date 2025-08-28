@@ -18,13 +18,14 @@ const { performanceMonitor } = require("./src/middleware/healthMonitor");
 const { closeRedisConnection } = require("./src/config/redis");
 const { processHealthAlert } = require("./src/services/alertService");
 const config = require("./src/config/environment");
-const { validationRouter } = require("./routes/validation");
-const { validatorRouter } = require("./routes/validators");
-const { contentRouter } = require("./routes/content");
-const { governanceRouter } = require("./routes/governance");
-const { ValidationNetwork } = require("./services/ValidationNetwork");
-const { ConsensusEngine } = require("./services/ConsensusEngine");
-const { ReputationSystem } = require("./services/ReputationSystem");
+// const { validationRouter } = require(".src/routes/validation");
+// const { validatorRouter } = require(".src/routes/validators");
+// const { contentRouter } = require(".src/routes/content");
+// const { governanceRouter } = require(".src/routes/governance");
+// const { ValidationNetwork } = require(".src/services/ValidationNetwork");
+// const { ConsensusEngine } = require(".src/services/ConsensusEngine");
+// const { ReputationSystem } = require(".src/services/ReputationSystem");
+const  serverAdapter  = require('./src/jobs/monitor');
 
 // Load environment variables
 dotenv.config();
@@ -42,7 +43,7 @@ const DEBUG = process.env.DEBUG === "true"; // enable for logging targets
 // ==========================
 app.use(helmet());
 app.use(compression());
-app.use(limiter);
+// app.use(limiter);
 // Add performance monitoring middleware
 app.use(performanceMonitor);
 
@@ -105,20 +106,20 @@ function getNextTarget(serviceName) {
 // ==========================
 
 // Initialize core services
-const validationNetwork = new ValidationNetwork();
-const consensusEngine = new ConsensusEngine();
-const reputationSystem = new ReputationSystem();
+// const validationNetwork = new ValidationNetwork();
+// const consensusEngine = new ConsensusEngine();
+// const reputationSystem = new ReputationSystem();
 
 // Make services available to routes
-app.locals.validationNetwork = validationNetwork;
-app.locals.consensusEngine = consensusEngine;
-app.locals.reputationSystem = reputationSystem;
+// app.locals.validationNetwork = validationNetwork;
+// app.locals.consensusEngine = consensusEngine;
+// app.locals.reputationSystem = reputationSystem;
 
 // Routes
-app.use("/api/validation", validationRouter);
-app.use("/api/validators", validatorRouter);
-app.use("/api/content", contentRouter);
-app.use("/api/governance", governanceRouter);
+// app.use("/api/validation", validationRouter);
+// app.use("/api/validators", validatorRouter);
+// app.use("/api/content", contentRouter);
+// app.use("/api/governance", governanceRouter);
 
 app.use("/api/auth", authLimiter, (req, res, next) => {
   const target = getNextTarget("AUTH");
@@ -158,6 +159,9 @@ app.use("/api/health", healthRoutes);
 app.use("/api/metrics", metricsRoutes);
 
 app.use('/monitoring', monitoringRouter);
+
+app.use("/admin/queues", serverAdapter.getRouter());
+
 // API Routes with Versioning
 // app.use("/api", require("./src/routes"));
 

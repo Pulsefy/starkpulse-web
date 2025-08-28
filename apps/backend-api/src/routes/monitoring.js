@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const monitor = require('../monitoring');
+const monitorController = require('../controllers/monitorController');
 
 // Endpoint to get monitoring status
 router.get('/status', (req, res) => {
@@ -13,5 +14,9 @@ router.get('/suspicious', (req, res) => {
   // Replace with actual suspicious transaction retrieval
   res.json({ suspicious: [] });
 });
+
+router.get("/monitor", monitorController.getQueueStats);
+
+
 
 module.exports = router;

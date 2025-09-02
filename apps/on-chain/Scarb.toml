@@ -8,6 +8,7 @@ edition = "2024_07"
 [dependencies]
 starknet = "2.9.2"
 
+
 [dev-dependencies]
 snforge_std_deprecated = "0.48.1"
 assert_macros = "2.9.2"

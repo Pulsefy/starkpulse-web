@@ -219,6 +219,7 @@ pub mod NewsManagementContract {
             result 
         }
 
+
         fn get_news_count(self: @ContractState) -> u128 {
             self.news_count.read()
         }

@@ -1,7 +1,7 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IAdminContract<TContractState> {
+pub trait IAdmin<TContractState> {
     fn grant_role(ref self: TContractState, role: felt252, account: ContractAddress);
     fn revoke_role(ref self: TContractState, role: felt252, account: ContractAddress);
     fn has_role(self: @TContractState, role: felt252, account: ContractAddress) -> bool;
@@ -122,7 +122,7 @@ pub mod AdminContract {
     }
 
     #[abi(embed_v0)]
-    impl AdminContractImpl of super::IAdminContract<ContractState> {
+    impl AdminContractImpl of super::IAdmin<ContractState> {
         fn grant_role(ref self: ContractState, role: felt252, account: ContractAddress) {
             self._check_role(self.role_admin.read(role), get_caller_address());
             self.roles.write((role, account.into()), true);

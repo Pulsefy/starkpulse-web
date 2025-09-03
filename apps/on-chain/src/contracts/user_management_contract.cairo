@@ -41,7 +41,7 @@ pub struct UserTierUpgraded {
 }
 
 #[starknet::contract]
-pub mod UserManagement {
+pub mod UserManagementContract {
     use super::{
         IUserManagement, 
         UserProfile, 
@@ -339,31 +339,5 @@ pub mod UserManagement {
         // Reward for verification
         self.update_reputation(user, 100);
     }
-    
-    // Admin functions
-    // #[external(v0)]
-    // fn set_reputation_config(
-    //     ref self: ContractState,
-    //     decay_rate: u64,
-    //     min_submission_rep: u128,
-    //     min_moderation_rep: u128
-    // ) {
-    //     self._only_owner();
-        
-    //     self.reputation_decay_rate.write(decay_rate);
-    //     self.min_submission_rep.write(min_submission_rep);
-    //     self.min_moderation_rep.write(min_moderation_rep);
-    // }
-    
-    // #[external(v0)]
-    // fn set_tier_thresholds(ref self: ContractState, thresholds: Array<u128>) {
-    //     self._only_owner();
-    //     self.tier_thresholds.write(thresholds);
-    // }
-    
-    // fn _only_owner(self: @ContractState) {
-    //     // Implementation would depend on your ownership structure
-    //     assert(get_caller_address() == self.owner.read(), "Not owner");
-    // }
 }
 

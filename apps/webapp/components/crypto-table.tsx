@@ -1,8 +1,9 @@
 "use client";
 
 import { TrendingUp, TrendingDown, Star } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { CryptoApiService, transformCryptoData } from "@/lib/api-services";
 
 interface CryptoData {
   id: number;
@@ -22,280 +23,68 @@ interface CryptoTableProps {
   formatNumberAction: (num: number) => string;
 }
 
-// Mock data for top 20 cryptocurrencies
-const mockCryptoData: CryptoData[] = [
-  {
-    id: 1,
-    name: "Bitcoin",
-    symbol: "BTC",
-    icon: "/crypto-icons/btc.png",
-    price: 84127.12,
-    change1h: 0.0,
-    change24h: 3.8,
-    change7d: -2.9,
-    volume24h: 29483607871,
-    marketCap: 1669278945761,
-    sparkline: [65, 59, 80, 81, 56, 55, 40, 60, 70, 45, 50, 55, 70, 75, 65],
-  },
-  {
-    id: 2,
-    name: "Ethereum",
-    symbol: "ETH",
-    icon: "/crypto-icons/eth.png",
-    price: 1913.53,
-    change1h: -0.3,
-    change24h: 2.5,
-    change7d: -10.5,
-    volume24h: 12779703866,
-    marketCap: 230861090232,
-    sparkline: [70, 65, 60, 65, 55, 40, 45, 60, 75, 60, 50, 55, 65, 70, 60],
-  },
-  {
-    id: 3,
-    name: "Tether",
-    symbol: "USDT",
-    icon: "/crypto-icons/usdt.png",
-    price: 1.0,
-    change1h: 0.0,
-    change24h: 0.0,
-    change7d: 0.0,
-    volume24h: 48731753230,
-    marketCap: 143349424457,
-    sparkline: [
-      100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    ],
-  },
-  {
-    id: 4,
-    name: "XRP",
-    symbol: "XRP",
-    icon: "/crypto-icons/xrp.png",
-    price: 2.36,
-    change1h: 0.2,
-    change24h: 5.3,
-    change7d: -0.6,
-    volume24h: 3717621302,
-    marketCap: 137249574105,
-    sparkline: [50, 55, 60, 55, 45, 50, 55, 60, 65, 60, 55, 50, 60, 65, 60],
-  },
-  {
-    id: 5,
-    name: "BNB",
-    symbol: "BNB",
-    icon: "/crypto-icons/bnb.png",
-    price: 589.29,
-    change1h: 0.3,
-    change24h: 1.8,
-    change7d: -0.8,
-    volume24h: 827850925,
-    marketCap: 85930064774,
-    sparkline: [60, 65, 70, 65, 55, 50, 55, 60, 65, 60, 55, 50, 60, 65, 60],
-  },
-  {
-    id: 6,
-    name: "Solana",
-    symbol: "SOL",
-    icon: "/crypto-icons/sol.png",
-    price: 133.38,
-    change1h: -0.5,
-    change24h: 8.2,
-    change7d: -4.0,
-    volume24h: 3642671111,
-    marketCap: 68188540632,
-    sparkline: [55, 60, 65, 60, 50, 45, 50, 55, 60, 55, 50, 45, 55, 60, 55],
-  },
-  {
-    id: 7,
-    name: "USDC",
-    symbol: "USDC",
-    icon: "/crypto-icons/usdc.png",
-    price: 0.9999,
-    change1h: 0.0,
-    change24h: 0.0,
-    change7d: 0.0,
-    volume24h: 4710256942,
-    marketCap: 58579418503,
-    sparkline: [
-      100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-    ],
-  },
-  {
-    id: 8,
-    name: "Cardano",
-    symbol: "ADA",
-    icon: "/crypto-icons/ada.png",
-    price: 0.45,
-    change1h: 0.1,
-    change24h: 2.3,
-    change7d: -5.2,
-    volume24h: 289456123,
-    marketCap: 15876543210,
-    sparkline: [45, 50, 55, 50, 40, 35, 40, 45, 50, 45, 40, 35, 45, 50, 45],
-  },
-  {
-    id: 9,
-    name: "Dogecoin",
-    symbol: "DOGE",
-    icon: "/crypto-icons/doge.png",
-    price: 0.12,
-    change1h: 0.5,
-    change24h: 3.7,
-    change7d: -2.1,
-    volume24h: 567891234,
-    marketCap: 16789123456,
-    sparkline: [40, 45, 50, 45, 35, 30, 35, 40, 45, 40, 35, 30, 40, 45, 40],
-  },
-  {
-    id: 10,
-    name: "Polkadot",
-    symbol: "DOT",
-    icon: "/crypto-icons/dot.png",
-    price: 6.78,
-    change1h: -0.2,
-    change24h: 1.5,
-    change7d: -3.8,
-    volume24h: 234567890,
-    marketCap: 8765432109,
-    sparkline: [50, 55, 60, 55, 45, 40, 45, 50, 55, 50, 45, 40, 50, 55, 50],
-  },
-  // Additional cryptocurrencies to make up the top 20
-  {
-    id: 11,
-    name: "Polygon",
-    symbol: "MATIC",
-    icon: "/crypto-icons/matic.png",
-    price: 0.58,
-    change1h: 0.3,
-    change24h: 2.8,
-    change7d: -4.5,
-    volume24h: 345678901,
-    marketCap: 5678901234,
-    sparkline: [55, 60, 65, 60, 50, 45, 50, 55, 60, 55, 50, 45, 55, 60, 55],
-  },
-  {
-    id: 12,
-    name: "Shiba Inu",
-    symbol: "SHIB",
-    icon: "/crypto-icons/shib.png",
-    price: 0.000018,
-    change1h: 0.7,
-    change24h: 4.2,
-    change7d: -1.9,
-    volume24h: 456789012,
-    marketCap: 10123456789,
-    sparkline: [60, 65, 70, 65, 55, 50, 55, 60, 65, 60, 55, 50, 60, 65, 60],
-  },
-  {
-    id: 13,
-    name: "Avalanche",
-    symbol: "AVAX",
-    icon: "/crypto-icons/avax.png",
-    price: 28.45,
-    change1h: -0.4,
-    change24h: 3.1,
-    change7d: -6.2,
-    volume24h: 567890123,
-    marketCap: 10234567890,
-    sparkline: [65, 70, 75, 70, 60, 55, 60, 65, 70, 65, 60, 55, 65, 70, 65],
-  },
-  {
-    id: 14,
-    name: "Chainlink",
-    symbol: "LINK",
-    icon: "/crypto-icons/link.png",
-    price: 13.67,
-    change1h: 0.2,
-    change24h: 2.9,
-    change7d: -3.5,
-    volume24h: 678901234,
-    marketCap: 7890123456,
-    sparkline: [50, 55, 60, 55, 45, 40, 45, 50, 55, 50, 45, 40, 50, 55, 50],
-  },
-  {
-    id: 15,
-    name: "Uniswap",
-    symbol: "UNI",
-    icon: "/crypto-icons/uni.png",
-    price: 7.23,
-    change1h: 0.1,
-    change24h: 1.7,
-    change7d: -4.8,
-    volume24h: 789012345,
-    marketCap: 5432109876,
-    sparkline: [45, 50, 55, 50, 40, 35, 40, 45, 50, 45, 40, 35, 45, 50, 45],
-  },
-  {
-    id: 16,
-    name: "Litecoin",
-    symbol: "LTC",
-    icon: "/crypto-icons/ltc.png",
-    price: 68.92,
-    change1h: -0.3,
-    change24h: 2.2,
-    change7d: -5.1,
-    volume24h: 890123456,
-    marketCap: 5098765432,
-    sparkline: [55, 60, 65, 60, 50, 45, 50, 55, 60, 55, 50, 45, 55, 60, 55],
-  },
-  {
-    id: 17,
-    name: "Bitcoin Cash",
-    symbol: "BCH",
-    icon: "/crypto-icons/bch.png",
-    price: 342.18,
-    change1h: 0.4,
-    change24h: 3.5,
-    change7d: -2.7,
-    volume24h: 901234567,
-    marketCap: 6789012345,
-    sparkline: [60, 65, 70, 65, 55, 50, 55, 60, 65, 60, 55, 50, 60, 65, 60],
-  },
-  {
-    id: 18,
-    name: "Cosmos",
-    symbol: "ATOM",
-    icon: "/crypto-icons/atom.png",
-    price: 7.89,
-    change1h: -0.2,
-    change24h: 1.9,
-    change7d: -4.3,
-    volume24h: 123456789,
-    marketCap: 3456789012,
-    sparkline: [50, 55, 60, 55, 45, 40, 45, 50, 55, 50, 45, 40, 50, 55, 50],
-  },
-  {
-    id: 19,
-    name: "Stellar",
-    symbol: "XLM",
-    icon: "/crypto-icons/xlm.png",
-    price: 0.11,
-    change1h: 0.3,
-    change24h: 2.6,
-    change7d: -3.2,
-    volume24h: 234567890,
-    marketCap: 3210987654,
-    sparkline: [45, 50, 55, 50, 40, 35, 40, 45, 50, 45, 40, 35, 45, 50, 45],
-  },
-  {
-    id: 20,
-    name: "Monero",
-    symbol: "XMR",
-    icon: "/crypto-icons/xmr.png",
-    price: 178.56,
-    change1h: 0.1,
-    change24h: 1.4,
-    change7d: -3.9,
-    volume24h: 345678901,
-    marketCap: 3109876543,
-    sparkline: [55, 60, 65, 60, 50, 45, 50, 55, 60, 55, 50, 45, 55, 60, 55],
-  },
-];
-
 export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
-  const [cryptoData] = useState<CryptoData[]>(mockCryptoData);
-  const [isLoading] = useState<boolean>(false);
-  const [error] = useState<string | null>(null);
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
+
+  // Fetch real crypto data
+  useEffect(() => {
+    const fetchCryptoData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const apiData = await CryptoApiService.getTopCryptocurrencies(20);
+        const transformedData = apiData.map(transformCryptoData);
+        setCryptoData(transformedData);
+      } catch (err) {
+        console.error('Error fetching crypto data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load cryptocurrency data');
+        
+        // Fallback to mock data if API fails
+        const mockCryptoData = [
+          {
+            id: 1,
+            name: "Bitcoin",
+            symbol: "BTC",
+            icon: "/crypto-icons/btc.png",
+            price: 84127.12,
+            change1h: 0.0,
+            change24h: 3.8,
+            change7d: -2.9,
+            volume24h: 29483607871,
+            marketCap: 1669278945761,
+            sparkline: [65, 59, 80, 81, 56, 55, 40, 60, 70, 45, 50, 55, 70, 75, 65],
+          },
+          {
+            id: 2,
+            name: "Ethereum",
+            symbol: "ETH",
+            icon: "/crypto-icons/eth.png",
+            price: 1913.53,
+            change1h: -0.3,
+            change24h: 2.5,
+            change7d: -10.5,
+            volume24h: 12779703866,
+            marketCap: 230861090232,
+            sparkline: [70, 65, 60, 65, 55, 40, 45, 60, 75, 60, 50, 55, 65, 70, 60],
+          },
+          // Add more mock data as needed...
+        ];
+        setCryptoData(mockCryptoData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCryptoData();
+    
+    // Refresh data every 5 minutes
+    const interval = setInterval(fetchCryptoData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleFavorite = (id: number) => {
     if (favorites.includes(id)) {
@@ -339,9 +128,11 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
         <h2 className="text-xl font-bold font-poppins text-white flex items-center gap-2">
           <span className="w-2 h-6 bg-blue-500 rounded-sm"></span>
           Cryptocurrency Market Cap
-          {/* <span className="text-sm text-gray-400 ml-2 font-normal">
-            Top {cryptoData.length}
-          </span> */}
+          {error && (
+            <span className="text-sm text-yellow-400 ml-2 font-normal">
+              (Using cached data)
+            </span>
+          )}
         </h2>
       </div>
 
@@ -358,7 +149,7 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
             </div>
           </div>
         </div>
-      ) : error ? (
+      ) : error && cryptoData.length === 0 ? (
         <div className="text-center text-red-500 py-8">
           {error}
           <button
@@ -427,7 +218,15 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
                             width={24}
                             height={24}
                             className="rounded-full w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to symbol if image fails to load
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
                           />
+                          <div className="hidden w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold">
+                            {crypto.symbol.substring(0, 2)}
+                          </div>
                         </div>
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold">
@@ -447,7 +246,7 @@ export function CryptoTable({ formatNumberAction }: CryptoTableProps) {
                       $
                       {crypto.price.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
+                        maximumFractionDigits: crypto.price < 1 ? 6 : 2,
                       })}
                     </span>
                   </td>

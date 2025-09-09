@@ -1,11 +1,11 @@
 import { Globe } from "@/components/globe";
 import { ButtonGroup } from "@/components/button-group";
-import { WalletButton } from "@/components/wallet-button";
+// Remove the WalletButton import
 
 export function HomeView() {
   return (
     <main className="w-full h-screen overflow-hidden">
-      <WalletButton/>
+      {/* Remove the WalletButton component */}
       <section className="relative w-full h-full flex items-center justify-center">
         <div className="absolute inset-0 w-full h-full">
           <Globe />
@@ -20,7 +20,6 @@ export function HomeView() {
             by a community driven platform with token-based incentives.
           </p>
           <ButtonGroup />
-          
         </div>
       </section>
     </main>

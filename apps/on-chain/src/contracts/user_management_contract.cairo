@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 pub trait IUserManagement<TContractState> {
     fn get_user_reputation(self: @TContractState, user: ContractAddress) -> u128;
     fn get_user_profile(self: @TContractState, user: ContractAddress) -> UserProfile;
-    fn update_reputation(ref self: TContractState, user: ContractAddress, delta: i128);
+    fn update_reputation(ref self: TContractState, user: ContractAddress, delta: i128, admin_account: ContractAddress, admin_contract_address: ContractAddress);
     fn can_moderate_content(self: @TContractState, user: ContractAddress) -> bool;
     fn can_submit_news(self: @TContractState, user: ContractAddress) -> bool;
 }
@@ -23,30 +23,15 @@ pub struct UserProfile {
     pub warnings: u8
 }
 
-#[derive(Drop, starknet::Event)]
-pub struct ReputationUpdated {
-    pub user: ContractAddress,
-    pub old_reputation: u128,
-    pub new_reputation: u128,
-    pub reason: ByteArray,
-    pub timestamp: u64
-}
 
-#[derive(Drop, starknet::Event)]
-pub struct UserTierUpgraded {
-    pub user: ContractAddress,
-    pub old_tier: u8,
-    pub new_tier: u8,
-    pub timestamp: u64
-}
 
 #[starknet::contract]
 pub mod UserManagementContract {
     use super::{
         IUserManagement, 
         UserProfile, 
-        ReputationUpdated, 
-        UserTierUpgraded
+        // ReputationUpdated, 
+        // UserTierUpgraded
     };
     use starknet::ContractAddress;
     use starknet::get_block_timestamp;
@@ -63,6 +48,14 @@ pub mod UserManagementContract {
         VecTrait
     };
     use core::traits::Into;
+    use crate::contracts::admin_contract::{
+        IAdminDispatcher,
+        IAdminDispatcherTrait,
+    };
+
+    use crate::contracts::admin_contract::AdminContract::{
+        DEFAULT_ADMIN_ROLE,
+    };
 
 
     #[storage]
@@ -86,21 +79,50 @@ pub mod UserManagementContract {
         UserTierUpgraded: UserTierUpgraded
     }
 
+    #[derive(Drop, starknet::Event)]
+pub struct ReputationUpdated {
+    pub user: ContractAddress,
+    pub old_reputation: u128,
+    pub new_reputation: u128,
+    pub reason: ByteArray,
+    pub timestamp: u64
+}
+
+#[derive(Drop, starknet::Event)]
+pub struct UserTierUpgraded {
+    pub user: ContractAddress,
+    pub old_tier: u8,
+    pub new_tier: u8,
+    pub timestamp: u64
+}
+
     #[constructor]
-    fn constructor(ref self: ContractState) {
+    fn constructor(
+        ref self: ContractState,
+        reputation_decay_rate: u64,
+        min_submission_rep: u128,
+        min_moderation_rep: u128,
+        init_tier_thresholds: Array<u128>,
+    ) {
         self.total_users.write(0);
-        self.reputation_decay_rate.write(2592000); // 30 days
+        self.reputation_decay_rate.write(reputation_decay_rate);
         self.last_decay_timestamp.write(get_block_timestamp());
-        
-        self.tier_thresholds.at(0).write(0);
-        self.tier_thresholds.at(1).write(100);
-        self.tier_thresholds.at(2).write(500);
-        self.tier_thresholds.at(3).write(2000);
-        self.tier_thresholds.at(4).write(5000);
-        
-        self.min_submission_rep.write(50);
-        self.min_moderation_rep.write(1000);
+        self.min_submission_rep.write(min_submission_rep);
+        self.min_moderation_rep.write(min_moderation_rep);
+
+        // Initialize tier_thresholds Vec from the input Array
+        let mut i: u32 = 0;
+        let num_thresholds: u32 = init_tier_thresholds.len();
+        loop {
+            if i == num_thresholds {
+                break;
+            }
+            self.tier_thresholds.append().write(*init_tier_thresholds.at(i));
+            i += 1;
+        };
     }
+
+
 
     #[abi(embed_v0)]
     pub impl UserManagementImpl of IUserManagement<ContractState> {
@@ -113,32 +135,44 @@ pub mod UserManagementContract {
         
         fn get_user_profile(self: @ContractState, user: ContractAddress) -> UserProfile {
 
-            let profile = self.user_profiles.entry(user).read().try_into().unwrap();
+            let profile: UserProfile = self.user_profiles.entry(user).read().try_into().unwrap();
 
            profile
         }
         
-        fn update_reputation(ref self: ContractState, user: ContractAddress, delta: i128) {
+        fn update_reputation(ref self: ContractState, user: ContractAddress, delta: i128, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
             self._ensure_user_exists(user);
             
             let mut profile = self.user_profiles.read(user);
             let old_reputation = profile.reputation.clone();
             let old_tier = profile.reputation_tier.clone();
 
-            let new_delta: u128 = delta.try_into().unwrap();
+            // let new_delta: u128 = delta.try_into().unwrap();
 
-            
+            let dispatcher: IAdminDispatcher = IAdminDispatcher { contract_address: admin_contract_address };
+
+            assert!(dispatcher.has_role(DEFAULT_ADMIN_ROLE, admin_account), "Caller is not the Admin");
             // Apply reputation change
+                      
+
             if delta > 0 {
-                profile.reputation += new_delta;
-            } else {
-                if new_delta > profile.reputation {
+                // Convert positive delta to u128 for addition. This conversion is safe.
+                let amount_to_add: u128 = delta.try_into().unwrap();
+                profile.reputation += amount_to_add;
+            } else if delta < 0 {
+                // Convert negative delta to its absolute u128 value for subtraction.
+                // This takes the absolute value of delta (e.g., -10 becomes 10) and then converts to u128, which is safe.
+                let amount_to_subtract: u128 = (-delta).try_into().unwrap();
+                // Prevent underflow for u128 reputation by capping at 0 if the subtraction would result in a negative value.
+                if amount_to_subtract > profile.reputation {
                     profile.reputation = 0;
                 } else {
-                    profile.reputation -= new_delta;
+                    profile.reputation -= amount_to_subtract;
                 }
             }
-            
+
+
+
             // Update activity timestamp
             profile.last_activity = get_block_timestamp();
             
@@ -268,7 +302,7 @@ pub mod UserManagementContract {
     
     // Reputation reward functions
     #[external(v0)]
-    fn reward_news_submission(ref self: ContractState, user: ContractAddress) {
+    fn reward_news_submission(ref self: ContractState, user: ContractAddress, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
         self._ensure_user_exists(user);
         
         let mut profile = self.user_profiles.read(user);
@@ -276,11 +310,11 @@ pub mod UserManagementContract {
         self.user_profiles.write(user, profile);
         
         // Base reward for submission
-        self.update_reputation(user, 10);
+        self.update_reputation(user, 10, admin_account, admin_contract_address);
     }
     
     #[external(v0)]
-    fn reward_news_approval(ref self: ContractState, user: ContractAddress) {
+    fn reward_news_approval(ref self: ContractState, user: ContractAddress, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
         self._ensure_user_exists(user);
         
         let mut profile = self.user_profiles.read(user);
@@ -288,11 +322,11 @@ pub mod UserManagementContract {
         self.user_profiles.write(user, profile);
         
         // Larger reward for approved news
-        self.update_reputation(user, 50);
+        self.update_reputation(user, 50, admin_account, admin_contract_address);
     }
     
     #[external(v0)]
-    fn reward_helpful_vote(ref self: ContractState, user: ContractAddress) {
+    fn reward_helpful_vote(ref self: ContractState, user: ContractAddress, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
         self._ensure_user_exists(user);
         
         let mut profile = self.user_profiles.read(user);
@@ -300,11 +334,11 @@ pub mod UserManagementContract {
         self.user_profiles.write(user, profile);
         
         // Small reward for helpful voting
-        self.update_reputation(user, 5);
+        self.update_reputation(user, 5, admin_account, admin_contract_address);
     }
     
     #[external(v0)]
-    fn penalize_user(ref self: ContractState, user: ContractAddress, reason: ByteArray) {
+    fn penalize_user(ref self: ContractState, user: ContractAddress, reason: ByteArray, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
         self._ensure_user_exists(user);
         
         let mut profile = self.user_profiles.read(user);
@@ -312,7 +346,7 @@ pub mod UserManagementContract {
         self.user_profiles.write(user, profile.clone());
         
         // Penalty for violations
-        self.update_reputation(user, -25);
+        self.update_reputation(user, -25, admin_account, admin_contract_address);
         
         // Additional event for penalty
         self.emit(
@@ -329,7 +363,7 @@ pub mod UserManagementContract {
     }
     
     #[external(v0)]
-    fn verify_user(ref self: ContractState, user: ContractAddress) {
+    fn verify_user(ref self: ContractState, user: ContractAddress, admin_account: ContractAddress, admin_contract_address: ContractAddress) {
         self._ensure_user_exists(user);
         
         let mut profile = self.user_profiles.read(user);
@@ -337,7 +371,7 @@ pub mod UserManagementContract {
         self.user_profiles.write(user, profile);
         
         // Reward for verification
-        self.update_reputation(user, 100);
+        self.update_reputation(user, 100, admin_account, admin_contract_address);
     }
 }
 

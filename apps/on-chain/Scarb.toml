@@ -20,7 +20,13 @@ sierra = true
 test = "snforge test"
 
 [tool.scarb]
-allow-prebuilt-plugins = ["snforge_std_deprecated"]
+allow-prebuilt-plugins = ["snforge_std"]
+
+
+[tool.snforge]
+# Make sure it's pointing to the right test folder, usually:
+test-path = "tests"
+
 
 # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
 

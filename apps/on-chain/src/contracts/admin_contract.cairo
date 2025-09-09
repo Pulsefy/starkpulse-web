@@ -27,11 +27,11 @@ pub mod AdminContract {
         StoragePointerWriteAccess,
     };
 
-    #[storage]
-    struct Storage {
+        #[storage]
+    pub struct Storage {
         // Role management
-        roles: Map::<(felt252, felt252), bool>,
-        role_admin: Map::<felt252, felt252>,
+        roles: Map::<(felt252, ContractAddress), bool>,
+        role_admin: Map::<felt252, ContractAddress>,
         
         // Configuration
         reward_rate: Map::<felt252, u128>,
@@ -39,15 +39,15 @@ pub mod AdminContract {
         
         // Moderation
         moderated_content: Map::<felt252, bool>,
-        content_moderator: Map::<felt252, ContractAddress>,
+        pub content_moderator: Map::<felt252, ContractAddress>,
         
         // Initialization flag
         initialized: bool
     }
 
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
+        #[event]
+        #[derive(Drop, starknet::Event)]
+    pub enum Event {
         RoleGranted: RoleGranted,
         RoleRevoked: RoleRevoked,
         ContentModerated: ContentModerated,
@@ -56,97 +56,100 @@ pub mod AdminContract {
         OperationsResumed: OperationsResumed
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct RoleGranted {
-        role: felt252,
-        account: ContractAddress,
-        admin: ContractAddress
+        #[derive(Drop, starknet::Event)]
+    pub struct RoleGranted {
+        #[key]
+        pub role: felt252,
+        pub account: ContractAddress,
+        pub admin: ContractAddress
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct RoleRevoked {
-        role: felt252,
-        account: ContractAddress,
-        admin: ContractAddress
+        #[derive(Drop, starknet::Event)]
+    pub struct RoleRevoked {
+        pub role: felt252,
+        pub account: ContractAddress,
+        pub admin: ContractAddress
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct ContentModerated {
-        content_id: felt252,
-        moderator: ContractAddress,
-        action: felt252
+        #[derive(Drop, starknet::Event)]
+    pub struct ContentModerated {
+        pub content_id: felt252,
+        pub moderator: ContractAddress,
+        pub action: felt252
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct RewardRateUpdated {
-        content_type: felt252,
-        new_rate: u128,
-        admin: ContractAddress
+        #[derive(Drop, starknet::Event)]
+    pub struct RewardRateUpdated {
+        pub content_type: felt252,
+        pub new_rate: u128,
+        pub admin: ContractAddress
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct EmergencyPaused {
-        admin: ContractAddress,
-        timestamp: u64
+        #[derive(Drop, starknet::Event)]
+    pub struct EmergencyPaused {
+        pub admin: ContractAddress,
+        pub timestamp: u64
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct OperationsResumed {
-        admin: ContractAddress,
-        timestamp: u64
+        #[derive(Drop, starknet::Event)]
+    pub struct OperationsResumed {
+        pub admin: ContractAddress,
+        pub timestamp: u64
     }
 
     // Constants for roles
-    const DEFAULT_ADMIN_ROLE: felt252 = 0;
-    const MODERATOR_ROLE: felt252 = 1;
-    const CONFIGURATOR_ROLE: felt252 = 2;
+    pub const DEFAULT_ADMIN_ROLE: felt252 = 0;
+    pub const MODERATOR_ROLE: felt252 = 1;
+    pub const CONFIGURATOR_ROLE: felt252 = 2;
+
 
     #[constructor]
-    fn constructor(ref self: ContractState, admin: ContractAddress) {
-        assert(!self.initialized.read(), 'Already initialized');
-        
-        // Setup default admin role
-        self.roles.write((DEFAULT_ADMIN_ROLE, admin.into()), true);
-        self.role_admin.write(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
-        
-        // Setup role hierarchy
-        self.role_admin.write(MODERATOR_ROLE, DEFAULT_ADMIN_ROLE);
-        self.role_admin.write(CONFIGURATOR_ROLE, DEFAULT_ADMIN_ROLE);
-        
-        // Initialize reward rates with default values
-        self.reward_rate.write('article', 1000);
-        self.reward_rate.write('video', 2000);
-        self.reward_rate.write('audio', 1500);
-        
-        self.initialized.write(true);
-    }
+pub fn constructor(ref self: ContractState, initial_admin: ContractAddress) {
 
-    #[abi(embed_v0)]
-    impl AdminContractImpl of super::IAdmin<ContractState> {
+    assert!(!self.initialized.read(), "AdminContract: already initialized");
+    self.initialized.write(true);
+
+    self.roles.write((DEFAULT_ADMIN_ROLE, initial_admin), true);
+   
+    self.role_admin.write(DEFAULT_ADMIN_ROLE, initial_admin); 
+
+   
+
+    self.emit(Event::RoleGranted(RoleGranted {
+        role: DEFAULT_ADMIN_ROLE,
+        account: initial_admin,
+        admin: initial_admin 
+    }));
+}
+
+    
+        #[abi(embed_v0)]
+    pub impl AdminContractImpl of super::IAdmin<ContractState> {
         fn grant_role(ref self: ContractState, role: felt252, account: ContractAddress) {
-            self._check_role(self.role_admin.read(role), get_caller_address());
-            self.roles.write((role, account.into()), true);
-            
-            self.emit(Event::RoleGranted(RoleGranted {
-                role,
-                account,
-                admin: get_caller_address()
-            }));
+            self.roles.write((role, account), true);
+
+            let event: RoleGranted = RoleGranted {
+                role: role,
+                account: account,
+                admin: self.role_admin.read(DEFAULT_ADMIN_ROLE)
+            };
+
+            self.emit(event);
         }
 
         fn revoke_role(ref self: ContractState, role: felt252, account: ContractAddress) {
-            self._check_role(self.role_admin.read(role), get_caller_address());
-            self.roles.write((role, account.into()), false);
+            self._check_role(role, account);
+            self.roles.write((role, account), false);
             
             self.emit(Event::RoleRevoked(RoleRevoked {
                 role,
                 account,
-                admin: get_caller_address()
+                admin: self.role_admin.read(DEFAULT_ADMIN_ROLE)
             }));
         }
 
         fn has_role(self: @ContractState, role: felt252, account: ContractAddress) -> bool {
-            self.roles.read((role, account.into()))
+            self.roles.read((role, account))
         }
 
         fn moderate_news(ref self: ContractState, content_id: felt252, action: felt252) {
@@ -211,11 +214,11 @@ pub mod AdminContract {
         }
     }
 
-    #[generate_trait]
-    impl InternalImpl of InternalTrait {
+        #[generate_trait]
+    pub impl InternalImpl of InternalTrait {
         fn _check_role(self: @ContractState, role: felt252, account: ContractAddress) {
             let has_role = self.has_role(role, account);
-            assert(has_role, 'AccessControl: missing role');
+            assert!(has_role, "AccessControl: missing role");
         }
 
         fn _when_not_paused(self: @ContractState) {

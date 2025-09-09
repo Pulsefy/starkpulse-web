@@ -2,7 +2,13 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait INewsVoting<TContractState> {
-    fn vote_on_news(ref self: TContractState, news_id: felt252, vote_type: u8);
+    fn vote_on_news(
+        ref self: TContractState, 
+        news_id: felt252, 
+        vote_type: u8, 
+        admin_contract_address: ContractAddress,
+        user_contract_address: ContractAddress
+    );
     fn get_news_votes(self: @TContractState, news_id: felt252) -> NewsVoteStats;
     fn get_user_vote(self: @TContractState, user: ContractAddress, news_id: felt252) -> u8;
     fn get_user_votes_count(self: @TContractState, user: ContractAddress) -> u32;
@@ -46,11 +52,7 @@ pub mod NewsVotingContract {
     };
 
     #[storage]
-    pub struct Storage {
-        // Contract addresses
-        user_contract_address: ContractAddress,
-        admin_contract_address: ContractAddress,
-        
+    pub struct Storage {      
         // Voting data
         news_votes: Map<felt252, NewsVoteStats>, // news_id -> vote stats
         user_votes: Map<(ContractAddress, felt252), UserVote>, // (user, news_id) -> vote details
@@ -105,29 +107,20 @@ pub mod NewsVotingContract {
     // Constants for AdminContract roles
     const CONFIGURATOR_ROLE: felt252 = 2;
 
-    #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        user_contract: ContractAddress,
-        admin_contract: ContractAddress
-    ) {
-        self.user_contract_address.write(user_contract);
-        self.admin_contract_address.write(admin_contract);
-        
-        // Default configuration
-        self.vote_cooldown.write(300); // 5 minutes cooldown
-        self.min_reputation_to_vote.write(10);
-        self.reputation_weight_multiplier.write(1);
-    }
-
+   
     #[abi(embed_v0)]
     pub impl NewsVotingImpl of INewsVoting<ContractState> {
-        fn vote_on_news(ref self: ContractState, news_id: felt252, vote_type: u8) {
+        fn vote_on_news(
+            ref self: ContractState, news_id: felt252, 
+            vote_type: u8, 
+            admin_contract_address: ContractAddress,
+            user_contract_address: ContractAddress
+        ) {
             let caller = get_caller_address();
             
             // Check if contract is paused using AdminContract
             let admin_contract = IAdminDispatcher { 
-                contract_address: self.admin_contract_address.read() 
+                contract_address: admin_contract_address
             };
             assert!(!admin_contract.is_paused(), "Contract is paused");
             
@@ -144,7 +137,7 @@ pub mod NewsVotingContract {
             
             // Check user has minimum reputation to vote
             let user_contract = IUserManagementDispatcher {
-                contract_address: self.user_contract_address.read()
+                contract_address: user_contract_address
             };
             let user_reputation = user_contract.get_user_reputation(caller);
             assert!(
@@ -253,11 +246,12 @@ pub mod NewsVotingContract {
         ref self: ContractState,
         cooldown: u64,
         min_reputation: u128,
-        weight_multiplier: u8
+        weight_multiplier: u8,
+        admin_contract_address: ContractAddress
     ) {
         // Check if caller has configurator role using AdminContract
         let admin_contract = IAdminDispatcher { 
-            contract_address: self.admin_contract_address.read() 
+            contract_address: admin_contract_address
         };
         let has_role = admin_contract.has_role(CONFIGURATOR_ROLE, get_caller_address());
         assert!(has_role, "Caller is not configurator");

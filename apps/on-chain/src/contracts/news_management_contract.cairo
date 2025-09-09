@@ -106,20 +106,6 @@ pub mod NewsManagementContract {
         NewsRemoved: NewsRemoved,
     }
 
-    #[constructor]
-    fn constructor(ref self: ContractState, initial_owner: ContractAddress) {
-        self.owner.write(initial_owner);
-        self.next_news_id.write(1);
-        self.news_count.write(0);
-
-        self.max_title_length.write(100);
-        self.max_content_length.write(1000);
-        self.min_submission_interval.write(300); 
-        self.max_submissions_per_user.write(10); 
-
-        self.moderators.write(initial_owner, true);
-    }
-
     #[abi(embed_v0)]
     pub impl NewsManagementImpl of INewsManagement<ContractState> {
         fn submit_news(
@@ -131,7 +117,7 @@ pub mod NewsManagementContract {
             let caller = get_caller_address();
             let timestamp = get_block_timestamp();
 
-            self._validate_submission(caller, title.clone(), content.clone()); // Clone for validation if needed, or pass @ByteArray
+            self._validate_submission(caller, title.clone(), content.clone()); 
 
             self._check_submission_limit(caller, timestamp);
 
@@ -343,7 +329,7 @@ pub mod NewsManagementContract {
         }
 
         fn _only_moderator(self: @ContractState) {
-            let caller = starknet::get_caller_address();
+            let caller = get_caller_address();
             let is_moderator = self.moderators.read(caller);
             assert!(is_moderator, "Caller is not moderator");
         }

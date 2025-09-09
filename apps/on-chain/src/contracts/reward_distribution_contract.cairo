@@ -2,10 +2,26 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IRewardDistribution<TContractState> {
-    fn claim_rewards(ref self: TContractState);
+    fn claim_rewards(
+        ref self: TContractState, 
+        admin_contract_address: ContractAddress,
+        user_contract_address: ContractAddress,
+        news_voting_contract_address: ContractAddress
+    );
     fn get_user_rewards(self: @TContractState, user: ContractAddress) -> u128;
-    fn get_pending_rewards(self: @TContractState, user: ContractAddress) -> u128;
-    fn set_reward_rates(ref self: TContractState, vote_reward: u128, reputation_multiplier: u128, daily_limit: u128);
+    fn get_pending_rewards(
+        self: @TContractState, 
+        user: ContractAddress,
+        user_contract_address: ContractAddress,
+        news_voting_contract_address: ContractAddress
+    ) -> u128;
+    fn set_reward_rates(
+        ref self: TContractState, 
+        vote_reward: u128, 
+        reputation_multiplier: u128, 
+        daily_limit: u128,
+        admin_contract_address: ContractAddress
+    );
 }
 
 #[starknet::contract]
@@ -28,22 +44,17 @@ pub mod RewardDistributionContract {
 
 
     #[storage]
-    pub struct Storage {
-        // Contract addresses
-        news_voting_contract_address: ContractAddress,
-        user_contract_address: ContractAddress,
-        admin_contract_address: ContractAddress,
-        
+    pub struct Storage { 
         // Reward configuration
-        vote_reward_rate: u128,          // Base reward per vote
-        reputation_multiplier: u128,     // Multiplier based on reputation tier
-        daily_reward_limit: u128,        // Max rewards per user per day
+        vote_reward_rate: u128,         
+        reputation_multiplier: u128,    
+        daily_reward_limit: u128,        
         
         // User reward tracking
-        user_rewards: Map<ContractAddress, u128>,           // Total claimed rewards
-        user_pending_rewards: Map<ContractAddress, u128>,   // Unclaimed rewards
-        last_claim_timestamp: Map<ContractAddress, u64>,    // Last claim time
-        daily_claimed: Map<(ContractAddress, u64), u128>,   // Daily claimed amount (user -> day -> amount)
+        user_rewards: Map<ContractAddress, u128>,          
+        user_pending_rewards: Map<ContractAddress, u128>,  
+        last_claim_timestamp: Map<ContractAddress, u64>,   
+        daily_claimed: Map<(ContractAddress, u64), u128>,  
         
         // Token address for distribution (if using separate token contract)
         token_address: ContractAddress,
@@ -85,37 +96,24 @@ pub mod RewardDistributionContract {
     // Constants for AdminContract roles
     const CONFIGURATOR_ROLE: felt252 = 2;
 
-    #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        news_voting_contract_address: ContractAddress,
-        user_contract: ContractAddress,
-        admin_contract: ContractAddress,
-        token_address: ContractAddress
-    ) {
-        self.news_voting_contract_address.write(news_voting_contract_address);
-        self.user_contract_address.write(user_contract);
-        self.admin_contract_address.write(admin_contract);
-        self.token_address.write(token_address);
-        
-        // Default reward rates
-        self.vote_reward_rate.write(10);
-        self.reputation_multiplier.write(100); // 1.00 multiplier in basis points
-        self.daily_reward_limit.write(1000);
-    }
-
+   
     #[abi(embed_v0)]
     impl RewardDistributionImpl of IRewardDistribution<ContractState> {
-        fn claim_rewards(ref self: ContractState) {
+        fn claim_rewards(
+            ref self: ContractState, 
+            admin_contract_address: ContractAddress,
+            user_contract_address: ContractAddress,
+            news_voting_contract_address: ContractAddress
+        ) {
             let caller = get_caller_address();
             
             // Check if contract is paused using AdminContract
             let admin_contract = IAdminDispatcher { 
-                contract_address: self.admin_contract_address.read() 
+                contract_address: admin_contract_address
             };
             assert!(!admin_contract.is_paused(), "Contract is paused");
             
-            let pending_rewards = self._calculate_pending_rewards(caller);
+            let pending_rewards = self._calculate_pending_rewards(caller, user_contract_address, news_voting_contract_address);
             assert!(pending_rewards > 0, "No rewards to claim");
             
             // Check daily limit
@@ -146,19 +144,25 @@ pub mod RewardDistributionContract {
             self.user_rewards.read(user)
         }
         
-        fn get_pending_rewards(self: @ContractState, user: ContractAddress) -> u128 {
-            self._calculate_pending_rewards(user)
+        fn get_pending_rewards(
+            self: @ContractState, 
+            user: ContractAddress,
+            user_contract_address: ContractAddress,
+            news_voting_contract_address: ContractAddress
+        ) -> u128 {
+            self._calculate_pending_rewards(user, user_contract_address, news_voting_contract_address)
         }
         
         fn set_reward_rates(
             ref self: ContractState,
             vote_reward: u128,
             reputation_multiplier: u128,
-            daily_limit: u128
+            daily_limit: u128,
+            admin_contract_address: ContractAddress
         ) {
             // Check if caller has configurator role using AdminContract
             let admin_contract = IAdminDispatcher { 
-                contract_address: self.admin_contract_address.read() 
+                contract_address: admin_contract_address
             };
             let has_role = admin_contract.has_role(CONFIGURATOR_ROLE, get_caller_address());
             assert!(has_role, "Caller is not configurator");
@@ -178,23 +182,33 @@ pub mod RewardDistributionContract {
     }
 
     #[external(v0)]
-    fn calculate_user_rewards(ref self: ContractState, user: ContractAddress) -> u128 {
-        self._calculate_pending_rewards(user)
+    fn calculate_user_rewards(
+        ref self: ContractState, 
+        user: ContractAddress,
+        user_contract_address: ContractAddress,
+        news_voting_contract_address: ContractAddress
+    ) -> u128 {
+        self._calculate_pending_rewards(user, user_contract_address, news_voting_contract_address)
     }
 
     #[external(v0)]
-    fn force_calculate_rewards(ref self: ContractState, user: ContractAddress) {
+    fn force_calculate_rewards(
+        ref self: ContractState, 
+        user: ContractAddress,
+        user_contract_address: ContractAddress,
+        news_voting_contract_address: ContractAddress
+    ) {
         // Only callable by admin or the user themselves
         let caller = get_caller_address();
         assert!(caller == user, "Can only calculate own rewards");
         
-        let rewards = self._calculate_pending_rewards(user);
+        let rewards = self._calculate_pending_rewards(user, user_contract_address, news_voting_contract_address);
         self.user_pending_rewards.write(user, rewards);
         
         self.emit(Event::RewardsCalculated(RewardsCalculated {
             user,
-            votes: self._get_user_votes(user),
-            reputation_tier: self._get_user_reputation_tier(user),
+            votes: self._get_user_votes(user, user_contract_address),
+            reputation_tier: self._get_user_reputation_tier(user, user_contract_address),
             calculated_reward: rewards,
             timestamp: get_block_timestamp()
         }));
@@ -202,13 +216,18 @@ pub mod RewardDistributionContract {
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        fn _calculate_pending_rewards(self: @ContractState, user: ContractAddress) -> u128 {
+        fn _calculate_pending_rewards(
+            self: @ContractState, 
+            user: ContractAddress,
+            user_contract_address: ContractAddress,
+            news_voting_contract_address: ContractAddress
+        ) -> u128 {
             let user_contract = IUserManagementDispatcher {
-                contract_address: self.user_contract_address.read()
+                contract_address: user_contract_address
             };
             
             let news_voting_contract = INewsVotingDispatcher {
-                contract_address: self.news_voting_contract_address.read()
+                contract_address: news_voting_contract_address
             };
             
             // Get user stats
@@ -227,16 +246,24 @@ pub mod RewardDistributionContract {
             multiplied_rewards + self.user_pending_rewards.read(user)
         }
         
-        fn _get_user_votes(self: @ContractState, user: ContractAddress) -> u32 {
+        fn _get_user_votes(
+            self: @ContractState, 
+            user: ContractAddress,
+            news_voting_contract_address: ContractAddress,
+        ) -> u32 {
             let news_voting_contract = INewsVotingDispatcher {
-                contract_address: self.news_voting_contract_address.read()
+                contract_address: news_voting_contract_address
             };
             news_voting_contract.get_user_votes_count(user)
         }
         
-        fn _get_user_reputation_tier(self: @ContractState, user: ContractAddress) -> u8 {
+        fn _get_user_reputation_tier(
+            self: @ContractState, 
+            user: ContractAddress,
+            user_contract_address: ContractAddress
+        ) -> u8 {
             let user_contract = IUserManagementDispatcher {
-                contract_address: self.user_contract_address.read()
+                contract_address: user_contract_address
             };
             user_contract.get_user_profile(user).reputation_tier
         }
